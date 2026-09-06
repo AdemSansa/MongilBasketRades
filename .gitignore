@@ -1,0 +1,36 @@
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/.pub-cache/
+mobile/.pub/
+mobile/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/**/gradle-wrapper.jar
+mobile/ios/Flutter/.last_build_id
+mobile/ios/Pods/
+*.g.dart
+*.freezed.dart
+
+# Java / Maven / Spring Boot
+backend/target/
+backend/.mvn/
+backend/*.iml
+backend/HELP.md
+
+# Env / secrets
+.env
+*.env.local
+application-local.yml
+application-local.properties
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# OS
+Thumbs.db
