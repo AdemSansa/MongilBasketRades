@@ -2,7 +2,7 @@
 
 Mobile-first application for managing Mongil Basket Rades basketball academy: player registration, groups/seasons, weekend training sessions, attendance, and payments.
 
-See [PROJECT_SCOPE.md](PROJECT_SCOPE.md) for the full scope, architecture, and roadmap.
+See [PROJECT_SCOPE.md](PROJECT_SCOPE.md) for the full scope and architecture, and [docs/ROADMAP.md](docs/ROADMAP.md) for current build status.
 
 ## Structure
 
