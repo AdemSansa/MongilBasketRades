@@ -74,7 +74,7 @@ Address/phone for the player are intentionally omitted — use the parent's. Add
 | Field | Type | Notes |
 |---|---|---|
 | id | UUID | PK |
-| name | VARCHAR | e.g. "U12" |
+| name | VARCHAR | free text — real groups are e.g. "Baby Basket", "Grandes Filles", "Garçons", not strict age bands |
 | season | FK → Season | N:1 |
 | ageMin | INT | |
 | ageMax | INT | |

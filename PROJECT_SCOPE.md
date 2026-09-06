@@ -19,7 +19,7 @@
 - Saturday
 - Sunday
 
-The academy trains children and teenagers approximately from **5 to 18 years old**.
+The academy trains children approximately from **5 to 14 years old** (confirmed via the academy's Facebook page bio, September 2026).
 
 The current administration relies heavily on:
 
@@ -345,18 +345,17 @@ This prevents old data from being overwritten.
 
 The academy needs groups based on age and/or skill.
 
-Example:
+The real groups currently used by Mongil Basket Rades (per the academy's weekly training-schedule posts) are gender/level-based, not strict age bands:
 
 ```text
-U8
-U10
-U12
-U14
-U16
-U18
+Baby Basket     (youngest)
+Grandes Filles  (older girls)
+Garçons         (boys)
 ```
 
-The exact categories should remain configurable by the director.
+Each group is tied to a named coach (e.g. Coach Fathi, Coach Amira, Coach Ines). A generic age-band scheme (U8, U10, U12...) was the original illustrative example in this document but does not match how the academy actually organizes groups.
+
+The exact categories — and the naming scheme itself — should remain configurable by the director. The `Group` entity stores `name` as free text plus an `ageMin`/`ageMax` range, so either scheme (or a mix) works without a data model change.
 
 Each group should have:
 
