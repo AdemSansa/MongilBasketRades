@@ -12,14 +12,15 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 **Just completed:**
 - Phase 0 environment fully verified — Flutter 3.47.2, Android SDK 36.0.0, Git all confirmed working by actually building and running the default Flutter app on a physical device (M2101K7BNY).
 - Phase 1 planning docs: MVP scope, entities, ERD, API spec, navigation.
-- Phase 2 Flutter foundation: feature-first `lib/` structure, theme, GoRouter with role-aware redirects, Riverpod, Dio client with JWT-attaching interceptor, secure token storage, reusable widgets, and a working login screen (loading/error/success states) backed by a stub `AuthRepository`. Theme updated to the real academy brand colors (navy/orange) after reviewing the Facebook page.
-- Phase 3 backend foundation: Spring Boot 4.1 project, PostgreSQL (Docker dev container), User entity + JPA, JWT access/refresh tokens, role-based auth (ADMIN/COACH/PARENT), global exception handling with field-level validation errors, `/api/auth/{login,register,refresh,me,logout}` all manually tested end-to-end with curl (success paths, validation errors, bad credentials, missing/garbage/wrong-type tokens). `mvn test` passes.
+- Phase 2 Flutter foundation: feature-first `lib/` structure, theme, GoRouter with role-aware redirects, Riverpod, Dio client with JWT-attaching interceptor, secure token storage, reusable widgets, and a working login screen (loading/error/success states). Theme updated to the real academy brand colors (navy/orange) after reviewing the Facebook page.
+- Phase 3 backend foundation: Spring Boot 4.1 project, PostgreSQL (Docker dev container), User entity + JPA, JWT access/refresh tokens, role-based auth (ADMIN/COACH/PARENT), global exception handling with field-level validation errors, `/api/auth/{login,register,refresh,me,logout}` all manually tested end-to-end with curl. `mvn test` passes.
+- **Milestone 1 achieved**: Flutter login screen connected to the real backend over the dev machine's LAN IP (with a debug-only cleartext network security exception, since Android blocks plain HTTP by default) and verified end-to-end on the physical device — login → JWT → role-based redirect → dashboard showing "Welcome, Sami Ben Ali".
 
 **In progress:** nothing active right now.
 
 **Not started:** Phases 4–12, Deployment.
 
-**Next up:** Phase 4 (Players & Parents) — Milestone 1 is now achievable: point the Flutter login screen at the real backend and confirm the full login → JWT → dashboard flow end-to-end on device.
+**Next up:** Phase 4 (Players & Parents) — the foundation (auth, both apps talking to each other) is proven, so this is the first real business-logic module.
 
 **Known gaps carried forward:**
 - Backend not yet pushed anywhere — local only, same as the mobile repo.
@@ -98,4 +99,4 @@ Detailed task lists for phases 4–12 and Deployment are in `PROJECT_SCOPE.md` �
 ## Milestone tracker (§44)
 
 **Milestone 1** — Flutter login screen → Spring Boot API → JWT → PostgreSQL → authenticated dashboard shell.
-Status: 🔄 Both halves work independently (Flutter UI ✅, backend API ✅ verified via curl) but haven't been connected and run together end-to-end on device yet. That's the very next task.
+Status: ✅ **Done.** Verified live on a physical Android device (M2101K7BNY) on 2026-09-06.
