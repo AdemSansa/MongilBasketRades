@@ -6,20 +6,19 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 
 ## Current Status
 
-**Active phase:** Phase 1 — Planning
+**Active phase:** Phase 3 — Backend Foundation (next)
 **Last updated:** 2026-09-06
 
 **Just completed:**
 - Phase 0 environment fully verified — Flutter 3.47.2, Android SDK 36.0.0, Git all confirmed working by actually building and running the default Flutter app on a physical device (M2101K7BNY).
-- Repo structure created (`mobile/`, `backend/` pending, `docs/`), git initialized, first commit made.
-- Flutter project scaffolded at `mobile/` (package `com.mongilbasket.mobile`).
+- Phase 1 planning docs: MVP scope, entities, ERD, API spec, navigation.
+- Phase 2 Flutter foundation: feature-first `lib/` structure, theme, GoRouter with role-aware redirects, Riverpod, Dio client with JWT-attaching interceptor, secure token storage, reusable widgets, and a working login screen (loading/error/success states) backed by a stub `AuthRepository` pointed at the not-yet-built backend. `flutter analyze` clean, widget test passing, verified running on a physical device.
 
-**In progress:**
-- Phase 1 planning docs (this pass): entities, ERD, API spec, navigation, MVP scope lock.
+**In progress:** nothing active right now.
 
-**Not started:** Phases 2–12, Deployment.
+**Not started:** Phases 3–12, Deployment.
 
-**Next up:** Phase 2 (Flutter foundation — theme, routing, Riverpod, Dio, folder structure) and Phase 3 (Backend foundation — Spring Boot project, PostgreSQL, JWT auth) can proceed in either order or in parallel; Milestone 1 (§44) needs both.
+**Next up:** Phase 3 (Spring Boot backend + PostgreSQL + JWT) so the login screen has a real API to call — that unlocks Milestone 1.
 
 ---
 
@@ -47,16 +46,18 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 - [x] Define navigation — `docs/architecture/navigation.md`
 - [x] Define MVP — `docs/requirements/mvp-scope.md`
 
-## Phase 2 — Flutter Foundation ⬜
+## Phase 2 — Flutter Foundation ✅
 
-- [ ] Create Flutter project — done as part of Phase 0 validation, needs revisit for real config
-- [ ] Configure app theme
-- [ ] Configure routing
-- [ ] Configure Riverpod
-- [ ] Configure Dio
-- [ ] Create folder structure (feature-first, §29)
-- [ ] Create reusable UI components
-- [ ] Create login UI
+- [x] Create Flutter project
+- [x] Configure app theme — `mobile/lib/app/theme.dart`
+- [x] Configure routing — `mobile/lib/app/routes.dart` (GoRouter, role-aware redirect)
+- [x] Configure Riverpod — `ProviderScope` in `main.dart`, providers throughout
+- [x] Configure Dio — `mobile/lib/core/network/dio_client.dart` (JWT-attaching interceptor)
+- [x] Create folder structure (feature-first, §29) — `app/`, `core/`, `features/`, `shared/`
+- [x] Create reusable UI components — `mobile/lib/shared/widgets/` (button, text field, loading, error views)
+- [x] Create login UI — `mobile/lib/features/auth/login_screen.dart`
+
+Login talks to a stub `AuthRepository` pointed at `POST /auth/login` — it will actually authenticate once Phase 3 builds that endpoint. Placeholder dashboards exist per role so the post-login redirect has somewhere to land.
 
 ## Phase 3 — Backend Foundation ⬜
 
@@ -89,4 +90,4 @@ Detailed task lists for phases 4–12 and Deployment are in `PROJECT_SCOPE.md` �
 ## Milestone tracker (§44)
 
 **Milestone 1** — Flutter login screen → Spring Boot API → JWT → PostgreSQL → authenticated dashboard shell.
-Status: ⬜ Not started. Requires Phase 2 + Phase 3 both underway.
+Status: 🔄 Half done. Flutter side ready and waiting (Phase 2 ✅); Spring Boot side not started (Phase 3 ⬜).
