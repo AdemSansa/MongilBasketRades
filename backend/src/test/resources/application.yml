@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5434/mongil_basket}
+    username: ${DB_USERNAME:mongil_basket}
+    password: ${DB_PASSWORD:mongil_basket_dev}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+app:
+  jwt:
+    secret: test-secret-key-not-for-production-use-only-in-automated-tests-0000
+    access-token-expiration-minutes: 15
+    refresh-token-expiration-days: 30

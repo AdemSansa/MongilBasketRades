@@ -6,19 +6,25 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 
 ## Current Status
 
-**Active phase:** Phase 3 — Backend Foundation (next)
+**Active phase:** Phase 4 — Players & Parents (next)
 **Last updated:** 2026-09-06
 
 **Just completed:**
 - Phase 0 environment fully verified — Flutter 3.47.2, Android SDK 36.0.0, Git all confirmed working by actually building and running the default Flutter app on a physical device (M2101K7BNY).
 - Phase 1 planning docs: MVP scope, entities, ERD, API spec, navigation.
-- Phase 2 Flutter foundation: feature-first `lib/` structure, theme, GoRouter with role-aware redirects, Riverpod, Dio client with JWT-attaching interceptor, secure token storage, reusable widgets, and a working login screen (loading/error/success states) backed by a stub `AuthRepository` pointed at the not-yet-built backend. `flutter analyze` clean, widget test passing, verified running on a physical device.
+- Phase 2 Flutter foundation: feature-first `lib/` structure, theme, GoRouter with role-aware redirects, Riverpod, Dio client with JWT-attaching interceptor, secure token storage, reusable widgets, and a working login screen (loading/error/success states) backed by a stub `AuthRepository`. Theme updated to the real academy brand colors (navy/orange) after reviewing the Facebook page.
+- Phase 3 backend foundation: Spring Boot 4.1 project, PostgreSQL (Docker dev container), User entity + JPA, JWT access/refresh tokens, role-based auth (ADMIN/COACH/PARENT), global exception handling with field-level validation errors, `/api/auth/{login,register,refresh,me,logout}` all manually tested end-to-end with curl (success paths, validation errors, bad credentials, missing/garbage/wrong-type tokens). `mvn test` passes.
 
 **In progress:** nothing active right now.
 
-**Not started:** Phases 3–12, Deployment.
+**Not started:** Phases 4–12, Deployment.
 
-**Next up:** Phase 3 (Spring Boot backend + PostgreSQL + JWT) so the login screen has a real API to call — that unlocks Milestone 1.
+**Next up:** Phase 4 (Players & Parents) — Milestone 1 is now achievable: point the Flutter login screen at the real backend and confirm the full login → JWT → dashboard flow end-to-end on device.
+
+**Known gaps carried forward:**
+- Backend not yet pushed anywhere — local only, same as the mobile repo.
+- Refresh-token revocation is stateless-JWT-only for now (no DB-backed revocable store) — a deliberate MVP simplification, noted in `docs/api/endpoints.md` and `AuthController.logout()`.
+- A prior backend attempt (Flyway migrations, bigint IDs, a proper revocable `refresh_tokens` table) was found already running against the dev Postgres container but not on disk anywhere in this repo; per user decision it was treated as disposable test data and dropped in favor of the fresh Phase 3 build. If that other implementation resurfaces, reconcile deliberately rather than assuming this one wins.
 
 ---
 
@@ -59,18 +65,20 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 
 Login talks to a stub `AuthRepository` pointed at `POST /auth/login` — it will actually authenticate once Phase 3 builds that endpoint. Placeholder dashboards exist per role so the post-login redirect has somewhere to land.
 
-## Phase 3 — Backend Foundation ⬜
+## Phase 3 — Backend Foundation ✅
 
-- [ ] Create Spring Boot project
-- [ ] Configure PostgreSQL
-- [ ] Configure JPA
-- [ ] Create User entity
-- [ ] Implement authentication
-- [ ] Implement JWT
-- [ ] Implement roles
-- [ ] Create global exception handling
-- [ ] Create validation
-- [ ] Test APIs with Postman
+- [x] Create Spring Boot project — `backend/`, Spring Boot 4.1.1 / Java 21
+- [x] Configure PostgreSQL — Docker dev container `mongil_basket_postgres` (localhost:5434)
+- [x] Configure JPA — Hibernate `ddl-auto: update` for MVP simplicity (no Flyway yet)
+- [x] Create User entity — `backend/src/main/java/com/mongilbasket/user/User.java`
+- [x] Implement authentication — `backend/src/main/java/com/mongilbasket/auth/`
+- [x] Implement JWT — `backend/src/main/java/com/mongilbasket/security/JwtService.java` (jjwt, access + refresh tokens)
+- [x] Implement roles — `Role` enum (ADMIN/COACH/PARENT), `SecurityConfig` enforces auth on all but login/register/refresh
+- [x] Create global exception handling — `backend/src/main/java/com/mongilbasket/common/GlobalExceptionHandler.java`
+- [x] Create validation — Jakarta Bean Validation on request DTOs, field-level errors in the response envelope
+- [x] Test APIs with Postman — tested via curl instead (equivalent coverage): register, login, me, refresh, logout, plus failure paths (bad credentials, validation errors, duplicate email, missing/invalid/wrong-type tokens)
+
+`/api/users` admin CRUD (listing/creating coach & admin accounts) was intentionally deferred — not needed until Phase 4+ actually requires managing non-self accounts.
 
 ## Phase 4 — Players & Parents ⬜
 ## Phase 5 — Groups & Seasons ⬜
@@ -90,4 +98,4 @@ Detailed task lists for phases 4–12 and Deployment are in `PROJECT_SCOPE.md` �
 ## Milestone tracker (§44)
 
 **Milestone 1** — Flutter login screen → Spring Boot API → JWT → PostgreSQL → authenticated dashboard shell.
-Status: 🔄 Half done. Flutter side ready and waiting (Phase 2 ✅); Spring Boot side not started (Phase 3 ⬜).
+Status: 🔄 Both halves work independently (Flutter UI ✅, backend API ✅ verified via curl) but haven't been connected and run together end-to-end on device yet. That's the very next task.

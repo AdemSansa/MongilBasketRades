@@ -25,4 +25,4 @@ cd mobile
 flutter run
 ```
 
-Backend setup instructions will be added once the Spring Boot project is scaffolded.
+See [backend/README.md](backend/README.md) for backend setup (requires `JWT_SECRET` and a running PostgreSQL instance).
