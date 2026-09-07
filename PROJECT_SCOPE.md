@@ -2,9 +2,9 @@
 
 > Project scope and implementation roadmap for the Mongil Basket Rades basketball academy.
 >
-> **Target:** Mobile-first application for academy administration, coaches, parents, and players.
+> **Target:** Two client applications sharing one backend — a mobile-first Flutter app for coaches and parents (front office), and an Angular web app for the director/admin (back office, used on PC).
 >
-> **Initial stack:** Flutter + Dart, Spring Boot + Java, PostgreSQL, REST API, JWT.
+> **Initial stack:** Flutter + Dart (mobile front office), Angular (admin back office web app), Spring Boot + Java, PostgreSQL, REST API, JWT.
 >
 > **Development principle:** Build the MVP first, keep the architecture extensible, and add advanced features only after the core workflow is stable.
 
@@ -54,26 +54,31 @@ The application should become the academy's central management platform.
 
 ### Main users
 
-| Role | Main responsibility |
-|---|---|
-| Director / Super Admin | Full academy management |
-| Coach | Sessions, attendance, player follow-up |
-| Parent | Children, registrations, payments, attendance |
-| Player | Optional future role |
+| Role | Main responsibility | Client app |
+|---|---|---|
+| Director / Super Admin | Full academy management | **Angular web app** (back office, PC) |
+| Coach | Sessions, attendance, player follow-up | **Flutter app** (front office, mobile) |
+| Parent | Children, registrations, payments, attendance | **Flutter app** (front office, mobile) |
+| Player | Optional future role | — |
 
 The first production version should prioritize:
 
 **Director + Coach + Parent**
+
+The director manages the academy far more comfortably on a PC than on a phone — bulk registration review, payment tracking, and reporting are desktop-shaped tasks. So the admin surface is a separate Angular web app from the start, not a mobile screen bolted onto the Flutter app and not deferred to "Version 3" (superseding the original §35/§48 plan of a future web dashboard — it's part of the initial build now). Coaches and parents stay on Flutter since their workflows (attendance on the sideline, checking a child's status) are inherently mobile.
 
 ---
 
 # 3. Recommended Architecture
 
 ```text
-                  ┌──────────────────────┐
-                  │      Flutter App     │
-                  │      Android/iOS     │
-                  └──────────┬───────────┘
+     ┌──────────────────────┐        ┌──────────────────────┐
+     │      Flutter App     │        │      Angular App      │
+     │  Android/iOS         │        │  Admin back office    │
+     │  (Coach + Parent)     │        │  (Director), PC/web   │
+     └──────────┬───────────┘        └──────────┬────────────┘
+                │                                │
+                └────────────┬───────────────────┘
                              │
                         REST / JSON
                              │
@@ -94,9 +99,10 @@ The first production version should prioritize:
              Future integrations:
              ├── Firebase Cloud Messaging
              ├── File/Image Storage
-             ├── Online Payments
-             └── Web Admin Dashboard
+             └── Online Payments
 ```
+
+Both clients are peers hitting the same REST API — the backend has no notion of "which app" is calling it, only which authenticated role. `SecurityConfig`/`@PreAuthorize` role checks (already built in Phase 3–4) are exactly what makes this split safe: an ADMIN-only endpoint is ADMIN-only regardless of whether Angular or Flutter (or curl) calls it.
 
 ---
 
@@ -108,7 +114,10 @@ Recommended root structure:
 mongil-basket-rades/
 │
 ├── mobile/
-│   └── Flutter application
+│   └── Flutter application (Coach + Parent)
+│
+├── admin/
+│   └── Angular application (Director / Admin)
 │
 ├── backend/
 │   └── Spring Boot application
@@ -124,13 +133,13 @@ mongil-basket-rades/
 └── .gitignore
 ```
 
-Do not put backend logic inside the Flutter project.
+Do not put backend logic inside either client project. Both `mobile/` and `admin/` are thin REST clients over the same `backend/` API — no business rules duplicated in either (Rule 2, §43).
 
 ---
 
 # 5. Technology Stack
 
-## Mobile
+## Mobile (Coach + Parent)
 
 - Flutter
 - Dart
@@ -140,6 +149,14 @@ Do not put backend logic inside the Flutter project.
 - JSON serialization
 - Secure local storage
 - Firebase Cloud Messaging later
+
+## Admin Web (Director)
+
+- Angular
+- TypeScript
+- A component library appropriate for data-heavy admin UI (tables, filters, forms) — pick when scaffolding, not decided yet
+- A typed HTTP layer over the same REST API (mirrors Dio's role on the Flutter side)
+- JWT stored appropriately for a browser context (not localStorage for the access token, to limit XSS exposure — decide the exact mechanism when scaffolding)
 
 ## Backend
 
@@ -964,6 +981,8 @@ player/
 
 # 29. Flutter Architecture
 
+Covers **Coach and Parent only** — the director/admin uses the separate Angular app (§2, §4). No `admin/` feature folder or admin dashboard belongs in `mobile/`.
+
 Recommended feature-first structure:
 
 ```text
@@ -1016,14 +1035,15 @@ Login
 Check JWT
   ↓
 Check role
-  ├── ADMIN  → Admin Dashboard
   ├── COACH  → Coach Dashboard
   └── PARENT → Parent Dashboard
 ```
 
+An ADMIN credential logging into the Flutter app isn't a supported flow — admin work happens in the Angular app. (If it's ever useful to let a director log into the mobile app too, e.g. to check things on the go, that's a future decision, not the current build.)
+
 Protect routes.
 
-A parent should not be able to navigate to an admin page simply by changing the route.
+A parent should not be able to navigate to a coach-only page simply by changing the route.
 
 Again, backend authorization remains mandatory.
 
@@ -1246,7 +1266,7 @@ What happens this weekend?
 
 # 37. Suggested Main Navigation
 
-## Admin
+## Admin (Angular app, not Flutter — see §2, §4)
 
 ```text
 Dashboard
@@ -1804,50 +1824,31 @@ That is the core product.
 # 48. Final Product Evolution
 
 ```text
-                    MONGIL BASKET RADES
-                           │
-                           ▼
-                  Mobile Management App
-                           │
-          ┌────────────────┼────────────────┐
-          ▼                ▼                ▼
-        Admin            Coach            Parent
-          │                │                │
-          └────────────────┼────────────────┘
-                           ▼
-                    Spring Boot API
-                           │
-                           ▼
-                       PostgreSQL
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-          Firebase      Storage      Payments
-          (future)      (future)       (future)
-                           │
-                           ▼
-                 Web Admin Dashboard
-                       (future)
+                       MONGIL BASKET RADES
+                              │
+              ┌───────────────┴───────────────┐
+              ▼                                ▼
+      Flutter Mobile App                Angular Admin App
+      (Coach + Parent)                   (Director), PC/web
+              │                                │
+              └───────────────┬────────────────┘
+                              ▼
+                       Spring Boot API
+                              │
+                              ▼
+                          PostgreSQL
+                              │
+                 ┌────────────┼────────────┐
+                 ▼            ▼            ▼
+             Firebase      Storage      Payments
+             (future)      (future)      (future)
 ```
 
 ---
 
 ## Current Project Status
 
-**Phase:** Environment setup
-
-**Next task:**
-
-1. Finish Android command-line tools.
-2. Accept Android licenses.
-3. Confirm `flutter doctor`.
-4. Create the GitHub repository.
-5. Create the project structure.
-6. Create the Flutter application.
-7. Run it on the Android emulator.
-8. Begin the authentication module.
-
-Do not start advanced features until the foundation is stable.
+See [docs/ROADMAP.md](docs/ROADMAP.md) — that file is the living source of truth for what phase is active and what's actually been built, kept in sync as work happens. This section intentionally doesn't duplicate it, to avoid drifting out of sync the way an earlier version of this block did.
 
 ---
 

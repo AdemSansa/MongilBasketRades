@@ -2,6 +2,8 @@
 
 Base path: `/api`. All responses use the envelope from `PROJECT_SCOPE.md` §32 (`{ success, data, message }`). All endpoints except `/auth/login` and `/auth/refresh` require `Authorization: Bearer <JWT>`. Authorization column is enforced server-side in Spring Security — never trust the client (§26, Rule 3).
 
+One API, two client apps (§2, §4): the Flutter app (Coach + Parent) and the Angular admin app (Director) are both just REST clients over this same backend. The Role column below is what actually gates access — it doesn't matter which app makes the call.
+
 ## Auth
 
 | Method | Path | Role | Notes |

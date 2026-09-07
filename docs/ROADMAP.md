@@ -6,8 +6,10 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 
 ## Current Status
 
-**Active phase:** Phase 5 — Groups & Seasons (next)
+**Active phase:** Phase 5 — Groups & Seasons (next), plus a new parallel workstream: the Angular admin app
 **Last updated:** 2026-09-07
+
+**Architecture decision (2026-09-07):** the director/admin surface moves from "future Flutter routes" to a dedicated **Angular web app** (`admin/`, not yet scaffolded), used on PC. Flutter (`mobile/`) now covers **Coach + Parent only**. See `PROJECT_SCOPE.md` §2/§4 and the new "Angular Admin App" section below for what this changes.
 
 **Just completed:**
 - Phase 0 environment fully verified — Flutter 3.47.2, Android SDK 36.0.0, Git all confirmed working by actually building and running the default Flutter app on a physical device (M2101K7BNY).
@@ -27,8 +29,8 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 - Backend not yet pushed anywhere — local only, same as the mobile repo.
 - Refresh-token revocation is stateless-JWT-only for now (no DB-backed revocable store) — a deliberate MVP simplification, noted in `docs/api/endpoints.md` and `AuthController.logout()`.
 - A prior backend attempt (Flyway migrations, bigint IDs, a proper revocable `refresh_tokens` table) was found already running against the dev Postgres container but not on disk anywhere in this repo; per user decision it was treated as disposable test data and dropped in favor of the fresh Phase 3 build. If that other implementation resurfaces, reconcile deliberately rather than assuming this one wins.
-- Admin/coach Flutter screens for players (list, search/filter, edit, archive) are not built — only the parent-facing "My Children" + "Add Child" flow exists. The backend API fully supports admin/coach use already; only the UI is missing. Worth doing before Phase 5 UI work if the director needs to manage players directly, otherwise fine to pick up alongside Phase 10 (Dashboard) admin screens.
-- Coach player visibility isn't scoped to "their groups" yet (every coach sees every player) — deferred to Phase 5 since Group/currentGroup doesn't exist until then.
+- Coach-only Flutter player screens (list, search/filter — read-only, own groups) aren't built yet, and coach visibility isn't scoped to "their groups" (every coach currently sees every player) — the latter is deferred to Phase 5 since Group/currentGroup doesn't exist until then.
+- Admin player management (list/search/filter/edit/archive) has no UI at all right now — not a Flutter gap anymore, it's Angular scope. See "Angular Admin App" below.
 
 ---
 
@@ -84,14 +86,37 @@ Login talks to a stub `AuthRepository` pointed at `POST /auth/login` — it will
 
 `/api/users` admin CRUD (listing/creating coach & admin accounts) was intentionally deferred — not needed until Phase 4+ actually requires managing non-self accounts.
 
-## Phase 4 — Players & Parents ✅ (backend + parent UI; admin/coach UI pending)
+## Phase 4 — Players & Parents ✅ (backend + parent UI; coach and admin UI pending)
 
 - [x] Player entity — `backend/src/main/java/com/mongilbasket/player/Player.java`
 - [x] Parent entity — `backend/src/main/java/com/mongilbasket/parent/Parent.java`, auto-created on `POST /auth/register`
 - [x] CRUD API — `GET/POST /api/players`, `GET/PUT /api/players/{id}`, `PUT /api/players/{id}/archive`, `GET /api/parents/me/children`, `GET /api/parents/{id}`, `PUT /api/parents/me`
-- [x] Flutter player screens — parent-facing only: `mobile/lib/features/players/` (list via `parent_home_screen.dart`, `add_child_screen.dart`). **Admin/coach player screens not built yet** (see Known gaps above).
+- [x] Flutter player screens — parent-facing only: `mobile/lib/features/players/` (list via `parent_home_screen.dart`, `add_child_screen.dart`). Coach-facing read-only screens not built yet (Known gaps above); admin player management is now Angular's job, not Flutter's (see "Angular Admin App" below).
 - [x] Parent-child relationship — enforced both in the DB (`Player.parent` FK) and in `PlayerService` ownership checks (403 if a parent requests a child that isn't theirs)
-- [x] Search/filter — `GET /players?search=&status=` (admin/coach only); no Flutter UI for it yet since only the parent flow was built this pass
+- [x] Search/filter — `GET /players?search=&status=` (admin/coach only, API-level); no UI for it yet on either client
+
+---
+
+## Angular Admin App (Director) — parallel workstream ⬜
+
+Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutter). Tracked separately because it's a third codebase sharing the same backend, decided on 2026-09-07 — see `PROJECT_SCOPE.md` §2/§4.
+
+**Status:** Not started — no `admin/` directory exists yet.
+
+- [ ] Angular environment setup (Node, Angular CLI)
+- [ ] Scaffold `admin/` project
+- [ ] Auth: login screen, JWT storage (browser-appropriate — not naive localStorage for the access token), route guards
+- [ ] Admin dashboard shell
+- [ ] Players management UI (list/search/filter/create/edit/archive) — **backend already ready**, built in Phase 4
+- [ ] Registrations review (approve/reject/waiting list) — needs Phase 6 backend first
+- [ ] Groups/Seasons management — needs Phase 5 backend first
+- [ ] Sessions management — needs Phase 7 backend first
+- [ ] Payments recording — needs Phase 9 backend first
+- [ ] Admin dashboard stats — needs Phase 10 backend endpoints
+
+**When to start:** whenever it's useful — the backend already fully supports admin player CRUD (Phase 4) right now, so this could start in parallel with Phase 5 today. The latest it can be deferred to is Phase 6 (Registration), since approving/rejecting registrations genuinely needs an admin UI to be usable day-to-day.
+
+---
 
 ## Phase 5 — Groups & Seasons ⬜
 ## Phase 6 — Registration ⬜
