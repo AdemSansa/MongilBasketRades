@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mongilbasket.common.ConflictException;
 import com.mongilbasket.common.NotFoundException;
 import com.mongilbasket.common.UnauthorizedException;
+import com.mongilbasket.parent.Parent;
+import com.mongilbasket.parent.ParentRepository;
 import com.mongilbasket.security.JwtService;
 import com.mongilbasket.user.Role;
 import com.mongilbasket.user.User;
@@ -24,6 +26,7 @@ public class AuthService {
     private static final String REFRESH_TOKEN_TYPE = "refresh";
 
     private final UserRepository userRepository;
+    private final ParentRepository parentRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -37,11 +40,7 @@ public class AuthService {
         return buildAuthResponse(user);
     }
 
-    /**
-     * Creates a PARENT-role User only. The corresponding Parent profile
-     * entity (address, linked children) is built in Phase 4 — see
-     * docs/database/entities.md.
-     */
+    /** Creates a PARENT-role User plus its linked Parent profile (docs/database/entities.md). */
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
@@ -57,6 +56,9 @@ public class AuthService {
                 .phone(request.phone())
                 .build();
         userRepository.save(user);
+
+        Parent parent = Parent.builder().user(user).build();
+        parentRepository.save(parent);
 
         return buildAuthResponse(user);
     }
