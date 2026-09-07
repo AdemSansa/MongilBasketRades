@@ -11,6 +11,8 @@ public interface PlayerRepository extends JpaRepository<Player, UUID> {
 
     List<Player> findByParentId(UUID parentId);
 
+    long countByCurrentGroupIdAndStatus(UUID currentGroupId, PlayerStatus status);
+
     // CAST(:search AS string) works around Postgres failing to infer a type
     // for a null bind parameter inside LOWER(CONCAT(...)) — without it,
     // a null :search causes "function lower(bytea) does not exist".

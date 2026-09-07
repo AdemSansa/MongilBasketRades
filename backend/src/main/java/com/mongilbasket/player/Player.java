@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.mongilbasket.group.Group;
 import com.mongilbasket.parent.Parent;
 
 import jakarta.persistence.Column;
@@ -26,11 +27,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * currentGroup (docs/database/entities.md) is intentionally omitted until
- * Phase 5 adds the Group entity — it's set on registration approval
- * (Phase 6), so nothing needs it yet.
- */
 @Entity
 @Table(name = "players")
 @Getter
@@ -76,6 +72,11 @@ public class Player {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "parent_id", nullable = false)
     private Parent parent;
+
+    /** Set on registration approval (Phase 6) — null until then. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_group_id")
+    private Group currentGroup;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

@@ -1,0 +1,12 @@
+package com.mongilbasket.season;
+
+import java.time.LocalDate;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+public record SeasonUpdateRequest(
+        @NotBlank String name,
+        @NotNull LocalDate startDate,
+        @NotNull LocalDate endDate) {
+}

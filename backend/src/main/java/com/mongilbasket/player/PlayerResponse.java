@@ -15,7 +15,8 @@ public record PlayerResponse(
         String emergencyContactPhone,
         String status,
         LocalDate registrationDate,
-        UUID parentId) {
+        UUID parentId,
+        UUID currentGroupId) {
 
     public static PlayerResponse from(Player player) {
         return new PlayerResponse(
@@ -30,6 +31,7 @@ public record PlayerResponse(
                 player.getEmergencyContactPhone(),
                 player.getStatus().name(),
                 player.getRegistrationDate(),
-                player.getParent().getId());
+                player.getParent().getId(),
+                player.getCurrentGroup() != null ? player.getCurrentGroup().getId() : null);
     }
 }
