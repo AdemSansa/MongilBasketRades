@@ -114,7 +114,7 @@ Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutt
 - [ ] Payments recording — needs Phase 9 backend first
 - [ ] Admin dashboard stats — needs Phase 10 backend endpoints
 
-**When to start:** whenever it's useful — the backend already fully supports admin player CRUD (Phase 4) right now, so this could start in parallel with Phase 5 today. The latest it can be deferred to is Phase 6 (Registration), since approving/rejecting registrations genuinely needs an admin UI to be usable day-to-day.
+**When to start:** decided 2026-09-07 — deferred. Continuing Flutter + backend momentum through Phase 5 and Phase 6 first; scaffold Angular once Phase 6 (Registration) lands, since that's the point an admin UI becomes genuinely necessary (approving registrations by hand via curl doesn't scale).
 
 ---
 
