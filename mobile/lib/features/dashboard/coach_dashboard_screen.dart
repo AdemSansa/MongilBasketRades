@@ -95,14 +95,10 @@ class _SessionCard extends StatelessWidget {
         subtitle: Text(
           '${session.timeRangeLabel}${session.location != null ? ' · ${session.location}' : ''}',
         ),
-        trailing: isScheduled
-            ? FilledButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: session.id)),
-                ),
-                child: const Text('Roster'),
-              )
-            : Chip(label: Text(session.status)),
+        trailing: isScheduled ? const Text('Roster ›') : Chip(label: Text(session.status)),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: session.id)),
+        ),
       ),
     );
   }
