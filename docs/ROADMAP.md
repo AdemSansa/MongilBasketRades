@@ -39,6 +39,7 @@ For login credentials to manually test each role, see [`docs/testing/test-accoun
 **Next up:** Phase 9 (Payments) — payment recording against a player/season, Angular UI for it (admin-only, same pattern as Registrations/Sessions).
 
 **Known gaps carried forward:**
+- Flutter's "My Children" screen doesn't surface a rejection reason — once a registration is REJECTED, `parent_home_screen.dart` correctly treats it as inactive and re-offers the "Register" button (the intended re-registration fix from Phase 6), but the reason itself (visible in Angular's Registrations screen) isn't shown anywhere in the app. Confirmed with the user this is acceptable for now, not a blocker.
 - Backend not yet pushed anywhere — local only, same as the mobile repo.
 - Refresh-token revocation is stateless-JWT-only for now (no DB-backed revocable store) — a deliberate MVP simplification, noted in `docs/api/endpoints.md` and `AuthController.logout()`.
 - A prior backend attempt (Flyway migrations, bigint IDs, a proper revocable `refresh_tokens` table) was found already running against the dev Postgres container but not on disk anywhere in this repo; per user decision it was treated as disposable test data and dropped in favor of the fresh Phase 3 build. If that other implementation resurfaces, reconcile deliberately rather than assuming this one wins.
