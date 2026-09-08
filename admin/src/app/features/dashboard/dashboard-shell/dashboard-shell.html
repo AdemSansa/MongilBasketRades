@@ -1,0 +1,25 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">Mongil Basket<br />Rades</div>
+
+    <nav>
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        Dashboard
+      </a>
+      <a routerLink="/dashboard/registrations" routerLinkActive="active">Registrations</a>
+      <a routerLink="/dashboard/players" routerLinkActive="active">Players</a>
+      <a routerLink="/dashboard/groups" routerLinkActive="active">Groups</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      @if (auth.currentUser(); as user) {
+        <div class="user">{{ user.firstName }} {{ user.lastName }}</div>
+      }
+      <button type="button" (click)="logout()">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

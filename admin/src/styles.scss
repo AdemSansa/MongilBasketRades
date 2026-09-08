@@ -1,0 +1,39 @@
+// Mongil Basket Rades brand colors — same navy/orange used in the Flutter
+// app's theme.dart, taken from the club's Facebook page logo.
+:root {
+  --brand-navy: #12294d;
+  --brand-navy-light: #1c3a68;
+  --brand-orange: #f5821f;
+  --brand-orange-dark: #d96f14;
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --text: #1a1a1a;
+  --text-muted: #6b7280;
+  --border: #e2e5ea;
+  --error: #c0392b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}

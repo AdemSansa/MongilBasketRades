@@ -1,0 +1,93 @@
+<h1>Registrations</h1>
+
+<div class="filters">
+  @for (filter of statusFilters; track filter.label) {
+    <button
+      type="button"
+      class="filter-chip"
+      [class.active]="activeFilter() === filter.value"
+      (click)="setFilter(filter.value)"
+    >
+      {{ filter.label }}
+    </button>
+  }
+</div>
+
+@if (errorMessage()) {
+  <div class="error-banner">
+    {{ errorMessage() }}
+    <button type="button" (click)="load()">Retry</button>
+  </div>
+}
+
+@if (isLoading()) {
+  <p class="muted">Loading…</p>
+} @else if (registrations().length === 0) {
+  <p class="muted">No registrations in this filter.</p>
+} @else {
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th>Group</th>
+        <th>Status</th>
+        <th>Submitted</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (registration of registrations(); track registration.id) {
+        <tr>
+          <td>{{ registration.playerName }}</td>
+          <td>{{ registration.requestedGroupName }}</td>
+          <td><span class="status-badge" [attr.data-status]="registration.status">{{ registration.status }}</span></td>
+          <td>{{ registration.registrationDate | date: 'medium' }}</td>
+          <td>
+            @if (registration.status === 'PENDING') {
+              @if (rejectingId() === registration.id) {
+                <div class="reject-inline">
+                  <input
+                    type="text"
+                    placeholder="Reason for rejection"
+                    [ngModel]="rejectNotes()"
+                    (ngModelChange)="rejectNotes.set($event)"
+                  />
+                  <button
+                    type="button"
+                    class="danger"
+                    [disabled]="!rejectNotes().trim() || actionInFlightId() === registration.id"
+                    (click)="confirmReject(registration)"
+                  >
+                    Confirm
+                  </button>
+                  <button type="button" (click)="cancelReject()">Cancel</button>
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  class="primary"
+                  [disabled]="actionInFlightId() === registration.id"
+                  (click)="approve(registration)"
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  class="danger"
+                  [disabled]="actionInFlightId() === registration.id"
+                  (click)="startReject(registration)"
+                >
+                  Reject
+                </button>
+              }
+            } @else if (registration.notes) {
+              <span class="muted">{{ registration.notes }}</span>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  </div>
+}

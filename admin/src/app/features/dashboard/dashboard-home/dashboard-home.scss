@@ -1,0 +1,14 @@
+h1 {
+  margin: 0 0 12px;
+  color: var(--brand-navy);
+}
+
+.placeholder-note {
+  color: var(--text-muted);
+  max-width: 480px;
+  line-height: 1.5;
+
+  a {
+    color: var(--brand-orange);
+  }
+}
