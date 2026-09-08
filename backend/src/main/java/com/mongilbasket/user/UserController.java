@@ -18,7 +18,7 @@ import com.mongilbasket.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/** Admin-only: create/list COACH and ADMIN accounts. Needed so groups (Phase 5) have coaches to assign. */
+/** Admin-only: create/list COACH, ADMIN, and PARENT accounts. */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor

@@ -9,8 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mongilbasket.auth.UserResponse;
 import com.mongilbasket.coach.Coach;
 import com.mongilbasket.coach.CoachRepository;
-import com.mongilbasket.common.BadRequestException;
 import com.mongilbasket.common.ConflictException;
+import com.mongilbasket.parent.Parent;
+import com.mongilbasket.parent.ParentRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +21,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final CoachRepository coachRepository;
+    private final ParentRepository parentRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -28,12 +30,14 @@ public class UserService {
         return users.stream().map(UserResponse::from).toList();
     }
 
-    /** Creates a COACH or ADMIN account, auto-creating the Coach profile when role == COACH. */
+    /**
+     * Creates a COACH, ADMIN, or PARENT account, auto-creating the linked Coach/Parent
+     * profile. Parents are normally created by an admin this way (the academy handles
+     * registration directly) rather than self-registering, though /auth/register still
+     * exists as an alternate path.
+     */
     @Transactional
     public UserResponse createUser(UserCreateRequest request) {
-        if (request.role() == Role.PARENT) {
-            throw new BadRequestException("Parents self-register via /auth/register");
-        }
         if (userRepository.existsByEmail(request.email())) {
             throw new ConflictException("An account with this email already exists");
         }
@@ -51,6 +55,9 @@ public class UserService {
         if (request.role() == Role.COACH) {
             Coach coach = Coach.builder().user(user).build();
             coachRepository.save(coach);
+        } else if (request.role() == Role.PARENT) {
+            Parent parent = Parent.builder().user(user).build();
+            parentRepository.save(parent);
         }
 
         return UserResponse.from(user);
