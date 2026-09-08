@@ -29,4 +29,9 @@ class ApiConstants {
   static String session(String id) => '/sessions/$id';
   static String sessionCancel(String id) => '/sessions/$id/cancel';
   static String sessionComplete(String id) => '/sessions/$id/complete';
+
+  static const String attendanceMark = '/attendance';
+
+  static String attendanceForSession(String sessionId) => '/attendance/session/$sessionId';
+  static String playerAttendance(String playerId) => '/players/$playerId/attendance';
 }

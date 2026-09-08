@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/widgets/error_view.dart';
 import '../../shared/widgets/loading_view.dart';
+import '../attendance/attendance_providers.dart';
 import '../auth/auth_controller.dart';
 import '../players/add_child_screen.dart';
 import '../players/player.dart';
@@ -128,6 +129,7 @@ class _ChildCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isArchived = child.status == 'ARCHIVED';
+    final isApproved = registration != null && registration!.status == 'APPROVED';
 
     return Card(
       child: Column(
@@ -141,7 +143,11 @@ class _ChildCard extends ConsumerWidget {
                   ? '${child.age} years old · ${registration!.requestedGroupName} — ${registration!.statusLabel}'
                   : '${child.age} years old',
             ),
-            trailing: isArchived ? const Chip(label: Text('Archived')) : null,
+            trailing: isArchived
+                ? const Chip(label: Text('Archived'))
+                : isApproved
+                    ? _AttendanceBadge(playerId: child.id)
+                    : null,
           ),
           if (!isArchived && registration == null)
             Padding(
@@ -170,6 +176,40 @@ class _ChildCard extends ConsumerWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _AttendanceBadge extends ConsumerWidget {
+  const _AttendanceBadge({required this.playerId});
+
+  final String playerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summary = ref.watch(playerAttendanceSummaryProvider(playerId));
+    return summary.when(
+      loading: () => const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (data) {
+        if (data.totalSessions == 0) return const SizedBox.shrink();
+        final rate = data.attendanceRate;
+        final color = rate >= 80
+            ? Colors.green
+            : rate >= 50
+                ? Colors.orange
+                : Colors.red;
+        return Chip(
+          label: Text('${rate.toStringAsFixed(0)}%'),
+          backgroundColor: color.withValues(alpha: 0.15),
+          labelStyle: TextStyle(color: color, fontWeight: FontWeight.bold),
+          visualDensity: VisualDensity.compact,
+        );
+      },
     );
   }
 }

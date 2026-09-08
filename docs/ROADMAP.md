@@ -6,7 +6,7 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 
 ## Current Status
 
-**Active phase:** Phase 8 — Attendance (next)
+**Active phase:** Phase 9 — Payments (next)
 **Last updated:** 2026-09-08
 
 **Architecture decision (2026-09-07):** the director/admin surface moves from "future Flutter routes" to a dedicated **Angular web app** (`admin/`, not yet scaffolded), used on PC. Flutter (`mobile/`) now covers **Coach + Parent only**. See `PROJECT_SCOPE.md` §2/§4 and the new "Angular Admin App" section below for what this changes.
@@ -24,14 +24,16 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 - Phase 7 Sessions & Schedule: `TrainingSession` entity/CRUD API (roster of currently-assigned players included on the detail endpoint, ready for Phase 8 to attach attendance marks), coach-scoped listing, ownership-checked cancel/complete. Flutter: coach dashboard now shows real today's-sessions (§38 weekend mode) with a roster/cancel/complete detail screen. Angular: a minimal Sessions screen (list + create + cancel) — the only way to schedule a session at all, since it's ADMIN-only. Verified end-to-end in-browser (Angular) and via the coach's own API calls (Flutter's device wasn't connected at test time, so that leg was verified at the API level rather than visually on-screen — flagged as a gap below). Hit and fixed a harder version of the recurring Postgres null-parameter bug — this time a null `LocalDate` bound as untyped `bytea`, and `bytea→date` has no cast at all in Postgres (unlike `bytea→text`, which is why the earlier `CAST` fix pattern worked for strings but not here) — switched `TrainingSessionRepository` to Spring Data Specifications, which never bind a parameter for a filter that isn't supplied, avoiding the whole bug class rather than patching another symptom.
 
 - **Real academy data imported** (2026-09-08): the academy's own roster spreadsheet (245 real players) was imported into the dev database via `backend/scripts/import_roster.py` — real names, DOBs where available (196/245 lacked one; those got a clearly-fake placeholder DOB of 2000-01-01 plus a `medicalNotes` flag for admin follow-up, per user decision), and 5 real coach-based groups (Mme Amira, Mlle Amira, Coach Fathi, Coach Ines, Coach Hejer) under the "2026-2027" season, which is now the active season (matches today's real date). This is data only — no schema/architecture changes were made to fit the spreadsheet; columns with no matching entity yet (weight, height, uniform size, insurance, monthly payment tracking) were deliberately not imported since `Payment` doesn't exist until Phase 9. The source spreadsheet itself was never committed to the repo (contains children's personal data).
+- Phase 8 Attendance: `Attendance` entity/API — bulk upsert (`POST /api/attendance`, one call marks/re-marks any number of players against a session), single-record correction (`PUT /api/attendance/{id}`), session roster+marks view (`GET /api/attendance/session/{id}`), and a player attendance summary with rate (`GET /api/players/{id}/attendance`, matches the §13 worked example: 17/20 → 85%). Ownership enforced the same way as sessions (a coach can only mark their own sessions' attendance; parents can view their own children's summary only). Flutter: `session_detail_screen.dart` now shows the roster as tap-to-mark chips (Present/Absent/Late/Excused per player, optimistic update with rollback on error) plus an "All present" bulk-fill shortcut for the §38 weekend workflow, and `parent_home_screen.dart` shows a color-coded attendance-rate badge on each approved child. Verified via curl against the real imported roster/session data (single-mark and summary endpoints return exactly the shape the Dart models expect). **Not verified visually on-device or in-browser** — no physical device was connected this session, and Flutter web's CanvasKit canvas rendering didn't accept synthetic clicks from the browser automation tool (a known friction with that combination, not a sign of an app problem). `flutter analyze` (0 issues) and `flutter test` both pass. Flagged as a gap below — needs a real on-device pass next time the phone is connected.
 
 **In progress:** nothing active right now.
 
-**Not started:** Phases 8–12, Deployment. Angular Players/Groups/Payments/Dashboard screens.
+**Not started:** Phases 9–12, Deployment. Angular Players/Groups/Payments/Dashboard screens.
 
-**Next up:** Phase 8 (Attendance) — mark present/absent/late/excused against the session roster Phase 7 already built, plus attendance history/percentage.
+**Next up:** Phase 9 (Payments) — payment recording against a player/season, Angular UI for it (admin-only, same pattern as Registrations/Sessions).
 
 **Known gaps carried forward:**
+- Phase 8's Flutter attendance-marking UI has not been visually verified — confirmed via `flutter analyze`/`flutter test` and via curl that the backend contract matches the Dart models exactly, but no physical device was connected and Flutter web automation didn't work through the browser tool. Verify on-device next time the phone (M2101K7BNY) is connected — log in as `mme.amira@mongilbasket.academy` / `ImportPending2026!`, open a session, tap through the attendance chips.
 - Backend not yet pushed anywhere — local only, same as the mobile repo.
 - Refresh-token revocation is stateless-JWT-only for now (no DB-backed revocable store) — a deliberate MVP simplification, noted in `docs/api/endpoints.md` and `AuthController.logout()`.
 - A prior backend attempt (Flyway migrations, bigint IDs, a proper revocable `refresh_tokens` table) was found already running against the dev Postgres container but not on disk anywhere in this repo; per user decision it was treated as disposable test data and dropped in favor of the fresh Phase 3 build. If that other implementation resurfaces, reconcile deliberately rather than assuming this one wins.
@@ -154,7 +156,14 @@ Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutt
 - [x] Session details — `GET /api/sessions/{id}` includes the group's current roster (Flutter `session_detail_screen.dart`); attendance marks against that roster are Phase 8
 - [x] Cancel session — `PUT /api/sessions/{id}/cancel`, ADMIN or the session's own coach; `PUT .../complete` also added (in scope per docs/database/entities.md's SCHEDULED/COMPLETED/CANCELLED status set)
 
-## Phase 8 — Attendance ⬜
+## Phase 8 — Attendance ✅ (backend fully verified; Flutter UI built but not visually verified on-device)
+
+- [x] Attendance entity — `backend/src/main/java/com/mongilbasket/attendance/Attendance.java` (real DB unique constraint on session+player — one mark per player per session has no legitimate exception, unlike Registration's constraint which had to be removed)
+- [x] Mark attendance — `POST /api/attendance` (bulk upsert: create or correct any number of marks in one call)
+- [x] Attendance history — `GET /api/players/{id}/attendance` (per-record history + totals)
+- [x] Attendance percentage — same endpoint, `attendanceRate` field (present/total × 100, rounded to 1 decimal)
+- [x] Flutter attendance UI — `session_detail_screen.dart` tap-to-mark chips per roster player + "All present" bulk shortcut (§38 weekend-mode priority); `parent_home_screen.dart` shows a color-coded rate badge per approved child. Not yet visually verified on-device (see Known gaps).
+
 ## Phase 9 — Payments ⬜
 ## Phase 10 — Dashboard ⬜
 ## Phase 11 — Notifications ⬜
