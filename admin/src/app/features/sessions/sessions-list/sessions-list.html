@@ -1,0 +1,97 @@
+<div class="header-row">
+  <h1>Sessions</h1>
+  <button type="button" class="primary" (click)="toggleForm()">
+    {{ showForm() ? 'Cancel' : '+ New Session' }}
+  </button>
+</div>
+
+@if (showForm()) {
+  <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
+    <label>
+      Group
+      <select formControlName="groupId">
+        <option value="" disabled>Select a group</option>
+        @for (group of groups(); track group.id) {
+          <option [value]="group.id">{{ group.name }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Date
+      <input type="date" formControlName="date" />
+    </label>
+
+    <label>
+      Start time
+      <input type="time" formControlName="startTime" />
+    </label>
+
+    <label>
+      End time
+      <input type="time" formControlName="endTime" />
+    </label>
+
+    <label>
+      Location (optional)
+      <input type="text" formControlName="location" />
+    </label>
+
+    <button type="submit" class="primary" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Creating…' : 'Create session' }}
+    </button>
+  </form>
+}
+
+@if (errorMessage()) {
+  <div class="error-banner">
+    {{ errorMessage() }}
+    <button type="button" (click)="load()">Retry</button>
+  </div>
+}
+
+@if (isLoading()) {
+  <p class="muted">Loading…</p>
+} @else if (sessions().length === 0) {
+  <p class="muted">No sessions scheduled yet.</p>
+} @else {
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Group</th>
+          <th>Coach</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Location</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (session of sessions(); track session.id) {
+          <tr>
+            <td>{{ session.groupName }}</td>
+            <td>{{ session.coachName }}</td>
+            <td>{{ session.date | date: 'mediumDate' }}</td>
+            <td>{{ session.startTime.substring(0, 5) }}–{{ session.endTime.substring(0, 5) }}</td>
+            <td>{{ session.location || '—' }}</td>
+            <td><span class="status-badge" [attr.data-status]="session.status">{{ session.status }}</span></td>
+            <td>
+              @if (session.status === 'SCHEDULED') {
+                <button
+                  type="button"
+                  class="danger"
+                  [disabled]="actionInFlightId() === session.id"
+                  (click)="cancelSession(session)"
+                >
+                  Cancel
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

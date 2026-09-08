@@ -41,6 +41,11 @@ export const routes: Routes = [
             (m) => m.GroupsPlaceholder,
           ),
       },
+      {
+        path: 'sessions',
+        loadComponent: () =>
+          import('./features/sessions/sessions-list/sessions-list').then((m) => m.SessionsList),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },
