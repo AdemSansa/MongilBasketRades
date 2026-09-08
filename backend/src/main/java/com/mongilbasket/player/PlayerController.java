@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mongilbasket.attendance.AttendanceService;
+import com.mongilbasket.attendance.PlayerAttendanceSummary;
 import com.mongilbasket.common.ApiResponse;
 import com.mongilbasket.user.User;
 
@@ -28,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class PlayerController {
 
     private final PlayerService playerService;
+    private final AttendanceService attendanceService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','COACH')")
@@ -64,5 +67,11 @@ public class PlayerController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<PlayerResponse> archive(@PathVariable UUID id) {
         return ApiResponse.ok(playerService.archive(id));
+    }
+
+    @GetMapping("/{id}/attendance")
+    public ApiResponse<PlayerAttendanceSummary> attendance(
+            @PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
+        return ApiResponse.ok(attendanceService.getPlayerAttendance(id, currentUser));
     }
 }
