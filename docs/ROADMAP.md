@@ -6,8 +6,8 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 
 ## Current Status
 
-**Active phase:** Phase 6 — Registration (next)
-**Last updated:** 2026-09-07
+**Active phase:** Angular Admin App scaffolding (next)
+**Last updated:** 2026-09-08
 
 **Architecture decision (2026-09-07):** the director/admin surface moves from "future Flutter routes" to a dedicated **Angular web app** (`admin/`, not yet scaffolded), used on PC. Flutter (`mobile/`) now covers **Coach + Parent only**. See `PROJECT_SCOPE.md` §2/§4 and the new "Angular Admin App" section below for what this changes.
 
@@ -19,12 +19,13 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 - **Milestone 1 achieved**: Flutter login connected to the real backend, verified end-to-end on the physical device.
 - Phase 4 Players & Parents: `Parent` entity (auto-created on registration) and `Player` entity/CRUD API, with ownership enforced in the service layer (a parent can only see/edit their own children). Flutter side: "My Children" list (loading/error/empty/data states, pull-to-refresh) and an Add Child form, both wired to the real backend and verified live on device — registered a parent, added a child, saw it appear in the list.
 - Phase 5 Groups & Seasons: `Season` and `Group` entities/CRUD API, `Coach` entity (mirrors `Parent`), and a minimal admin `/api/users` endpoint to create coach/admin accounts (deferred from Phase 3, now genuinely needed). `Player.currentGroup` added (deferred from Phase 4). All verified end-to-end with curl, including single-active-season enforcement and role boundaries. No new Flutter UI this phase — group/season management is ADMIN-only, which now means Angular, not Flutter.
+- Phase 6 Registration: `Registration` entity/workflow (submit → approve/waitlist → reject/cancel), with capacity-aware approval (auto-downgrades to WAITING_LIST when the group is full) and re-registration allowed after a rejection (uniqueness is enforced against active statuses only, not any-status — fixed a real bug found during testing where the DB constraint permanently blocked re-registering after a REJECTED attempt). Flutter: parents can browse groups for the active season and submit a registration per child, with live status shown on the My Children screen. Verified end-to-end on device.
 
 **In progress:** nothing active right now.
 
-**Not started:** Phases 6–12, Deployment.
+**Not started:** Angular admin app, Phases 7–12, Deployment.
 
-**Next up:** Phase 6 (Registration) — the last backend/Flutter phase before scaffolding Angular (per the decision below).
+**Next up:** scaffold the Angular admin app (`admin/`) — per the 2026-09-07 decision, this was deferred until Phase 6 landed, and it has. Registrations review (approve/reject) is the first thing that actually needs it, since doing that by hand via curl doesn't scale. Phase 7 (Sessions & Schedule) can follow either in parallel or after, since it doesn't block on Angular.
 
 **Known gaps carried forward:**
 - Backend not yet pushed anywhere — local only, same as the mobile repo.
@@ -103,7 +104,7 @@ Login talks to a stub `AuthRepository` pointed at `POST /auth/login` — it will
 
 Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutter). Tracked separately because it's a third codebase sharing the same backend, decided on 2026-09-07 — see `PROJECT_SCOPE.md` §2/§4.
 
-**Status:** Not started — no `admin/` directory exists yet.
+**Status:** Not started — no `admin/` directory exists yet. **This is now the active next task** (2026-09-08) — Phase 6 landed, which was the trigger point per the 2026-09-07 decision.
 
 - [ ] Angular environment setup (Node, Angular CLI)
 - [ ] Scaffold `admin/` project
@@ -111,12 +112,10 @@ Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutt
 - [ ] Admin dashboard shell
 - [ ] Players management UI (list/search/filter/create/edit/archive) — **backend already ready**, built in Phase 4
 - [ ] Groups/Seasons management — **backend already ready**, built in Phase 5
-- [ ] Registrations review (approve/reject/waiting list) — needs Phase 6 backend first
+- [ ] Registrations review (approve/reject/waiting list) — **backend already ready**, built in Phase 6 — the actual trigger for starting Angular now
 - [ ] Sessions management — needs Phase 7 backend first
 - [ ] Payments recording — needs Phase 9 backend first
 - [ ] Admin dashboard stats — needs Phase 10 backend endpoints
-
-**When to start:** decided 2026-09-07 — deferred. Continuing Flutter + backend momentum through Phase 5 and Phase 6 first; scaffold Angular once Phase 6 (Registration) lands, since that's the point an admin UI becomes genuinely necessary (approving registrations by hand via curl doesn't scale).
 
 ---
 
@@ -126,9 +125,18 @@ Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutt
 - [x] Group entity — `backend/src/main/java/com/mongilbasket/group/Group.java`, CRUD, read open to any authenticated role
 - [x] Capacity — `Group.capacity` + derived `currentCount` in `GroupResponse` (active players currently assigned)
 - [x] Coach assignment — `Coach` entity (mirrors `Parent`), `Group.coach` FK, minimal admin `POST/GET /api/users` to create coach accounts
-- [ ] Flutter group management — **not applicable**: group/season writes are ADMIN-only, and admin UI is Angular now (see below), not Flutter. Flutter's role here (read-only group lists for registration/session UI) comes in Phase 6/7 when there's an actual coach/parent-facing feature that needs it.
+- [x] Flutter group management — writes stay ADMIN-only (Angular's job, not Flutter's); read-only group browsing for parents shipped in Phase 6 (`mobile/lib/features/groups/`, used by the registration flow).
 
-## Phase 6 — Registration ⬜
+## Phase 6 — Registration ✅
+
+- [x] Registration entity — `backend/src/main/java/com/mongilbasket/registration/Registration.java`
+- [x] Parent registration form — `mobile/lib/features/registrations/register_child_screen.dart`, browses groups for the active season and submits
+- [x] Admin registration list — **not applicable to Flutter**: Angular's job (see below)
+- [x] Approve — `PUT /api/registrations/{id}/approve`, sets `Player.currentGroup` unless the group is full
+- [x] Reject — `PUT /api/registrations/{id}/reject`, requires a reason
+- [x] Waiting list — automatic outcome of approving when the group is at capacity, not a separate action
+- [x] Registration status — shown live on the Flutter "My Children" screen (`GET /registrations/me`), with cancel while pending
+
 ## Phase 7 — Sessions & Schedule ⬜
 ## Phase 8 — Attendance ⬜
 ## Phase 9 — Payments ⬜
