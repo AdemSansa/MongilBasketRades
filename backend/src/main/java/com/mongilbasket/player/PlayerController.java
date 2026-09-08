@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mongilbasket.attendance.AttendanceService;
 import com.mongilbasket.attendance.PlayerAttendanceSummary;
 import com.mongilbasket.common.ApiResponse;
+import com.mongilbasket.payment.PaymentResponse;
+import com.mongilbasket.payment.PaymentService;
 import com.mongilbasket.user.User;
 
 import jakarta.validation.Valid;
@@ -31,6 +33,7 @@ public class PlayerController {
 
     private final PlayerService playerService;
     private final AttendanceService attendanceService;
+    private final PaymentService paymentService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','COACH')")
@@ -73,5 +76,11 @@ public class PlayerController {
     public ApiResponse<PlayerAttendanceSummary> attendance(
             @PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
         return ApiResponse.ok(attendanceService.getPlayerAttendance(id, currentUser));
+    }
+
+    @GetMapping("/{id}/payments")
+    public ApiResponse<List<PaymentResponse>> payments(
+            @PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
+        return ApiResponse.ok(paymentService.getForPlayer(id, currentUser));
     }
 }
