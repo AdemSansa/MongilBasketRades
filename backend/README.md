@@ -46,6 +46,10 @@ Server starts on `http://localhost:8080`, API base path `/api`.
 
 Requires the same Postgres connection as `spring.datasource.*` (see `src/test/resources/application.yml`) — no in-memory DB substitution yet, kept simple for the MVP per PROJECT_SCOPE.md Rule 4.
 
+## Real data import
+
+`scripts/import_roster.py` bulk-imports the academy's real roster from its Excel export directly into the database (not through the REST API — appropriate for a one-time historical migration). See the script's docstring for usage and the decisions it makes about incomplete rows. **Not idempotent for players/parents** — re-running duplicates them. The source spreadsheet itself is never committed (contains children's names/phone numbers/addresses).
+
 ## Notes on framework version
 
 Scaffolded against **Spring Boot 4.1.1 / Spring Security 7** (current at scaffold time, September 2026) — noticeably newer than most existing tutorials/Stack Overflow answers, which target Boot 3.x. A few APIs moved package between major versions (e.g. `UsernamePasswordAuthenticationFilter` is now under `org.springframework.security.web.authentication`, not `...security.authentication`) — keep that in mind when consulting older references.
