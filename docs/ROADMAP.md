@@ -6,7 +6,7 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 
 ## Current Status
 
-**Active phase:** Phase 7 — Sessions & Schedule (next)
+**Active phase:** Phase 8 — Attendance (next)
 **Last updated:** 2026-09-08
 
 **Architecture decision (2026-09-07):** the director/admin surface moves from "future Flutter routes" to a dedicated **Angular web app** (`admin/`, not yet scaffolded), used on PC. Flutter (`mobile/`) now covers **Coach + Parent only**. See `PROJECT_SCOPE.md` §2/§4 and the new "Angular Admin App" section below for what this changes.
@@ -21,12 +21,13 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 - Phase 5 Groups & Seasons: `Season` and `Group` entities/CRUD API, `Coach` entity (mirrors `Parent`), and a minimal admin `/api/users` endpoint to create coach/admin accounts (deferred from Phase 3, now genuinely needed). `Player.currentGroup` added (deferred from Phase 4). All verified end-to-end with curl, including single-active-season enforcement and role boundaries. No new Flutter UI this phase — group/season management is ADMIN-only, which now means Angular, not Flutter.
 - Phase 6 Registration: `Registration` entity/workflow (submit → approve/waitlist → reject/cancel), with capacity-aware approval (auto-downgrades to WAITING_LIST when the group is full) and re-registration allowed after a rejection (uniqueness is enforced against active statuses only, not any-status — fixed a real bug found during testing where the DB constraint permanently blocked re-registering after a REJECTED attempt). Flutter: parents can browse groups for the active season and submit a registration per child, with live status shown on the My Children screen. Verified end-to-end on device.
 - **Angular admin app scaffolded** (`admin/`, Angular 22, standalone/signals): auth (login, session restore across page reloads via refresh token, route guard), dashboard shell with sidebar nav, and a fully working **Registrations review screen** — filter by status, approve, reject with a required reason. Verified in-browser end-to-end against the real backend. `ng test` (7/7) and `ng build` both pass. Players and Groups pages are placeholders — their backends (Phase 4/5) are ready, screens aren't built yet.
+- Phase 7 Sessions & Schedule: `TrainingSession` entity/CRUD API (roster of currently-assigned players included on the detail endpoint, ready for Phase 8 to attach attendance marks), coach-scoped listing, ownership-checked cancel/complete. Flutter: coach dashboard now shows real today's-sessions (§38 weekend mode) with a roster/cancel/complete detail screen. Angular: a minimal Sessions screen (list + create + cancel) — the only way to schedule a session at all, since it's ADMIN-only. Verified end-to-end in-browser (Angular) and via the coach's own API calls (Flutter's device wasn't connected at test time, so that leg was verified at the API level rather than visually on-screen — flagged as a gap below). Hit and fixed a harder version of the recurring Postgres null-parameter bug — this time a null `LocalDate` bound as untyped `bytea`, and `bytea→date` has no cast at all in Postgres (unlike `bytea→text`, which is why the earlier `CAST` fix pattern worked for strings but not here) — switched `TrainingSessionRepository` to Spring Data Specifications, which never bind a parameter for a filter that isn't supplied, avoiding the whole bug class rather than patching another symptom.
 
 **In progress:** nothing active right now.
 
-**Not started:** Phases 7–12, Deployment. Angular Players/Groups/Sessions/Payments/Dashboard screens.
+**Not started:** Phases 8–12, Deployment. Angular Players/Groups/Payments/Dashboard screens.
 
-**Next up:** Phase 7 (Sessions & Schedule) — backend + Flutter (coach-facing). The Angular Players/Groups screens can be picked up whenever, independent of phase order, since their backends already exist.
+**Next up:** Phase 8 (Attendance) — mark present/absent/late/excused against the session roster Phase 7 already built, plus attendance history/percentage.
 
 **Known gaps carried forward:**
 - Backend not yet pushed anywhere — local only, same as the mobile repo.
@@ -35,6 +36,7 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 - Coach-only Flutter player screens (list, search/filter — read-only, own groups) aren't built yet. Coach visibility also still isn't scoped to "their groups" (every coach sees every player in `PlayerService.list()`) — Group now exists so this is no longer blocked, just not done yet; worth fixing whenever the coach player-list screen actually gets built.
 - Admin player management (list/search/filter/edit/archive) has no UI at all right now — not a Flutter gap anymore, it's Angular scope. See "Angular Admin App" below.
 - `Season.active` uniqueness ("only one active season") is enforced in `SeasonService`, not a DB constraint — matches the original plan in `docs/database/erd.md` ("simpler for v1, revisit if it becomes a real bug source").
+- Phase 7's Flutter coach "Today" screen was verified via direct API calls (matching exactly what the screen itself calls), not visually on-device — the test phone wasn't connected at the time. Worth a quick visual confirmation next time the device is available, though the risk is low given the identical Phase 4/5/6 pattern has been visually verified every other time.
 
 ---
 
@@ -114,7 +116,7 @@ Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutt
 - [ ] Players management UI (list/search/filter/create/edit/archive) — backend ready since Phase 4, placeholder page exists, not built yet
 - [ ] Groups/Seasons management — backend ready since Phase 5, placeholder page exists, not built yet
 - [x] Registrations review (approve/reject/waiting list) — `features/registrations/registrations-list/`, the actual trigger for starting Angular, fully working: status filter chips, approve, reject with a required reason shown inline (not a browser `prompt()`)
-- [ ] Sessions management — needs Phase 7 backend first
+- [x] Sessions management — `features/sessions/sessions-list/`: list, create (group dropdown + date/time/location), cancel. Minimal but functional — no edit or "assign substitute coach" UI yet.
 - [ ] Payments recording — needs Phase 9 backend first
 - [ ] Admin dashboard stats — needs Phase 10 backend endpoints
 
@@ -138,7 +140,16 @@ Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutt
 - [x] Waiting list — automatic outcome of approving when the group is at capacity, not a separate action
 - [x] Registration status — shown live on the Flutter "My Children" screen (`GET /registrations/me`), with cancel while pending
 
-## Phase 7 — Sessions & Schedule ⬜
+## Phase 7 — Sessions & Schedule ✅
+
+- [x] TrainingSession entity — `backend/src/main/java/com/mongilbasket/session/TrainingSession.java` (named to avoid confusion with HTTP sessions)
+- [x] Create session — `POST /api/sessions` (ADMIN, via the new Angular Sessions screen)
+- [x] Assign group — required on create
+- [x] Assign coach — defaults to the group's coach, overridable per-session (substitute coach)
+- [x] Schedule UI — Angular `features/sessions/sessions-list/` (admin, create/list/cancel) and Flutter coach dashboard (today's sessions, §38 weekend mode)
+- [x] Session details — `GET /api/sessions/{id}` includes the group's current roster (Flutter `session_detail_screen.dart`); attendance marks against that roster are Phase 8
+- [x] Cancel session — `PUT /api/sessions/{id}/cancel`, ADMIN or the session's own coach; `PUT .../complete` also added (in scope per docs/database/entities.md's SCHEDULED/COMPLETED/CANCELLED status set)
+
 ## Phase 8 — Attendance ⬜
 ## Phase 9 — Payments ⬜
 ## Phase 10 — Dashboard ⬜
