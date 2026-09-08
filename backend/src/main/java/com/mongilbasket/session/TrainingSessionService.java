@@ -2,8 +2,12 @@ package com.mongilbasket.session;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +42,20 @@ public class TrainingSessionService {
         if (currentUser.getRole() == Role.COACH) {
             effectiveCoachId = coachProfileOf(currentUser).getId();
         }
-        return sessionRepository.search(groupId, effectiveCoachId, date).stream()
+
+        // Specification.allOf(...) requires every element to be non-null in
+        // this Spring Data version ("Other specification must not be null"),
+        // so filter out the not-supplied filters before combining instead
+        // of passing nulls straight through.
+        List<Specification<TrainingSession>> filters = Stream.of(
+                        TrainingSessionSpecifications.groupIdEquals(groupId),
+                        TrainingSessionSpecifications.coachIdEquals(effectiveCoachId),
+                        TrainingSessionSpecifications.dateEquals(date))
+                .filter(Objects::nonNull)
+                .toList();
+        Specification<TrainingSession> spec = Specification.allOf(filters);
+
+        return sessionRepository.findAll(spec, Sort.by("date").and(Sort.by("startTime"))).stream()
                 .map(TrainingSessionResponse::from)
                 .toList();
     }

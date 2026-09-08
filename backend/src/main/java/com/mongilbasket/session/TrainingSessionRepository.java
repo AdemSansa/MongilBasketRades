@@ -1,26 +1,20 @@
 package com.mongilbasket.session;
 
-import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface TrainingSessionRepository extends JpaRepository<TrainingSession, UUID> {
-
-    // Both occurrences of :date need CAST(... AS date) — not just the
-    // equality one. Postgres assigns each JPQL parameter *usage* its own
-    // "$n" placeholder, and the bare "$n IS NULL" usage (with no other
-    // context) is what actually fails type inference here, not the typed
-    // equality usage. Same root cause as PlayerRepository.search's :search
-    // cast, just biting a different one of the two usages this time.
-    @Query("SELECT s FROM TrainingSession s WHERE "
-            + "(:groupId IS NULL OR s.group.id = :groupId) AND "
-            + "(:coachId IS NULL OR s.coach.id = :coachId) AND "
-            + "(CAST(:date AS date) IS NULL OR s.date = CAST(:date AS date)) "
-            + "ORDER BY s.date, s.startTime")
-    List<TrainingSession> search(
-            @Param("groupId") UUID groupId, @Param("coachId") UUID coachId, @Param("date") LocalDate date);
+/**
+ * Uses Specifications (see TrainingSessionSpecifications) instead of a
+ * JPQL "(:param IS NULL OR ...)" query for the optional filters — that
+ * pattern kept hitting Postgres parameter-type-inference failures (a null
+ * LocalDate binds as untyped bytea, and there's no bytea->date cast at
+ * all, so even CAST(:date AS date) errored outright; see git history for
+ * the two failed attempts). Specifications never bind a parameter for a
+ * filter that isn't actually supplied, which sidesteps the problem
+ * entirely rather than working around it.
+ */
+public interface TrainingSessionRepository
+        extends JpaRepository<TrainingSession, UUID>, JpaSpecificationExecutor<TrainingSession> {
 }
