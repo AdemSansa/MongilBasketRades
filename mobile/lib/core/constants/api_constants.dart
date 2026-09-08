@@ -23,4 +23,10 @@ class ApiConstants {
   static const String myRegistrations = '/registrations/me';
 
   static String registrationCancel(String id) => '/registrations/$id/cancel';
+
+  static const String sessionsToday = '/sessions/today';
+
+  static String session(String id) => '/sessions/$id';
+  static String sessionCancel(String id) => '/sessions/$id/cancel';
+  static String sessionComplete(String id) => '/sessions/$id/complete';
 }
