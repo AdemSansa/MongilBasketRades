@@ -3,7 +3,7 @@
 Two client apps sharing one backend for managing Mongil Basket Rades basketball academy: player registration, groups/seasons, weekend training sessions, attendance, and payments.
 
 - **Flutter app** (`mobile/`) — Coach and Parent, mobile-first
-- **Angular app** (`admin/`, not yet scaffolded) — Director/Admin, PC/web back office
+- **Angular app** (`admin/`) — Director/Admin, PC/web back office
 
 See [PROJECT_SCOPE.md](PROJECT_SCOPE.md) for the full scope and architecture, and [docs/ROADMAP.md](docs/ROADMAP.md) for current build status.
 
@@ -11,7 +11,7 @@ See [PROJECT_SCOPE.md](PROJECT_SCOPE.md) for the full scope and architecture, an
 
 ```text
 mobile/    Flutter application (Coach + Parent)
-admin/     Angular application (Director) — not yet scaffolded
+admin/     Angular application (Director)
 backend/   Spring Boot application
 docs/      Architecture, database, API, and requirements docs
 ```
@@ -19,7 +19,7 @@ docs/      Architecture, database, API, and requirements docs
 ## Stack
 
 - **Mobile:** Flutter, Dart, Riverpod, Dio, GoRouter
-- **Admin web:** Angular (not yet scaffolded)
+- **Admin web:** Angular, TypeScript
 - **Backend:** Java 21, Spring Boot, Spring Security, JWT, Spring Data JPA
 - **Database:** PostgreSQL
 
@@ -28,6 +28,12 @@ docs/      Architecture, database, API, and requirements docs
 ```bash
 cd mobile
 flutter run
+```
+
+```bash
+cd admin
+npm install
+npm start
 ```
 
 See [backend/README.md](backend/README.md) for backend setup (requires `JWT_SECRET` and a running PostgreSQL instance).

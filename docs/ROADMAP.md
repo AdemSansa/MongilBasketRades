@@ -6,7 +6,7 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 
 ## Current Status
 
-**Active phase:** Angular Admin App scaffolding (next)
+**Active phase:** Phase 7 — Sessions & Schedule (next)
 **Last updated:** 2026-09-08
 
 **Architecture decision (2026-09-07):** the director/admin surface moves from "future Flutter routes" to a dedicated **Angular web app** (`admin/`, not yet scaffolded), used on PC. Flutter (`mobile/`) now covers **Coach + Parent only**. See `PROJECT_SCOPE.md` §2/§4 and the new "Angular Admin App" section below for what this changes.
@@ -20,12 +20,13 @@ Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Upda
 - Phase 4 Players & Parents: `Parent` entity (auto-created on registration) and `Player` entity/CRUD API, with ownership enforced in the service layer (a parent can only see/edit their own children). Flutter side: "My Children" list (loading/error/empty/data states, pull-to-refresh) and an Add Child form, both wired to the real backend and verified live on device — registered a parent, added a child, saw it appear in the list.
 - Phase 5 Groups & Seasons: `Season` and `Group` entities/CRUD API, `Coach` entity (mirrors `Parent`), and a minimal admin `/api/users` endpoint to create coach/admin accounts (deferred from Phase 3, now genuinely needed). `Player.currentGroup` added (deferred from Phase 4). All verified end-to-end with curl, including single-active-season enforcement and role boundaries. No new Flutter UI this phase — group/season management is ADMIN-only, which now means Angular, not Flutter.
 - Phase 6 Registration: `Registration` entity/workflow (submit → approve/waitlist → reject/cancel), with capacity-aware approval (auto-downgrades to WAITING_LIST when the group is full) and re-registration allowed after a rejection (uniqueness is enforced against active statuses only, not any-status — fixed a real bug found during testing where the DB constraint permanently blocked re-registering after a REJECTED attempt). Flutter: parents can browse groups for the active season and submit a registration per child, with live status shown on the My Children screen. Verified end-to-end on device.
+- **Angular admin app scaffolded** (`admin/`, Angular 22, standalone/signals): auth (login, session restore across page reloads via refresh token, route guard), dashboard shell with sidebar nav, and a fully working **Registrations review screen** — filter by status, approve, reject with a required reason. Verified in-browser end-to-end against the real backend. `ng test` (7/7) and `ng build` both pass. Players and Groups pages are placeholders — their backends (Phase 4/5) are ready, screens aren't built yet.
 
 **In progress:** nothing active right now.
 
-**Not started:** Angular admin app, Phases 7–12, Deployment.
+**Not started:** Phases 7–12, Deployment. Angular Players/Groups/Sessions/Payments/Dashboard screens.
 
-**Next up:** scaffold the Angular admin app (`admin/`) — per the 2026-09-07 decision, this was deferred until Phase 6 landed, and it has. Registrations review (approve/reject) is the first thing that actually needs it, since doing that by hand via curl doesn't scale. Phase 7 (Sessions & Schedule) can follow either in parallel or after, since it doesn't block on Angular.
+**Next up:** Phase 7 (Sessions & Schedule) — backend + Flutter (coach-facing). The Angular Players/Groups screens can be picked up whenever, independent of phase order, since their backends already exist.
 
 **Known gaps carried forward:**
 - Backend not yet pushed anywhere — local only, same as the mobile repo.
@@ -100,19 +101,19 @@ Login talks to a stub `AuthRepository` pointed at `POST /auth/login` — it will
 
 ---
 
-## Angular Admin App (Director) — parallel workstream ⬜
+## Angular Admin App (Director) — parallel workstream 🔄
 
 Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutter). Tracked separately because it's a third codebase sharing the same backend, decided on 2026-09-07 — see `PROJECT_SCOPE.md` §2/§4.
 
-**Status:** Not started — no `admin/` directory exists yet. **This is now the active next task** (2026-09-08) — Phase 6 landed, which was the trigger point per the 2026-09-07 decision.
+**Status:** Scaffolded and live (2026-09-08) — auth + Registrations review are fully working; Players/Groups/Sessions/Payments/Dashboard remain.
 
-- [ ] Angular environment setup (Node, Angular CLI)
-- [ ] Scaffold `admin/` project
-- [ ] Auth: login screen, JWT storage (browser-appropriate — not naive localStorage for the access token), route guards
-- [ ] Admin dashboard shell
-- [ ] Players management UI (list/search/filter/create/edit/archive) — **backend already ready**, built in Phase 4
-- [ ] Groups/Seasons management — **backend already ready**, built in Phase 5
-- [ ] Registrations review (approve/reject/waiting list) — **backend already ready**, built in Phase 6 — the actual trigger for starting Angular now
+- [x] Angular environment setup — Node 24, Angular CLI 22 (already installed)
+- [x] Scaffold `admin/` project — Angular 22, standalone components, signals, vitest
+- [x] Auth: login screen, JWT storage (access token in memory, refresh token in `sessionStorage` — see `auth.service.ts` for the reasoning), route guard (`core/guards/auth.guard.ts`)
+- [x] Admin dashboard shell — sidebar nav (`features/dashboard/dashboard-shell/`)
+- [ ] Players management UI (list/search/filter/create/edit/archive) — backend ready since Phase 4, placeholder page exists, not built yet
+- [ ] Groups/Seasons management — backend ready since Phase 5, placeholder page exists, not built yet
+- [x] Registrations review (approve/reject/waiting list) — `features/registrations/registrations-list/`, the actual trigger for starting Angular, fully working: status filter chips, approve, reject with a required reason shown inline (not a browser `prompt()`)
 - [ ] Sessions management — needs Phase 7 backend first
 - [ ] Payments recording — needs Phase 9 backend first
 - [ ] Admin dashboard stats — needs Phase 10 backend endpoints

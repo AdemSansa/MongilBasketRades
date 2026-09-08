@@ -152,11 +152,11 @@ Do not put backend logic inside either client project. Both `mobile/` and `admin
 
 ## Admin Web (Director)
 
-- Angular
+- Angular 22 (standalone components, signals)
 - TypeScript
-- A component library appropriate for data-heavy admin UI (tables, filters, forms) — pick when scaffolding, not decided yet
-- A typed HTTP layer over the same REST API (mirrors Dio's role on the Flutter side)
-- JWT stored appropriately for a browser context (not localStorage for the access token, to limit XSS exposure — decide the exact mechanism when scaffolding)
+- Hand-rolled components/styling for now — no UI component library added yet; revisit if hand-rolled tables/forms become a bottleneck as more screens are built
+- `HttpClient` with a functional interceptor attaching the JWT (mirrors Dio's role on the Flutter side)
+- Access token in memory only; refresh token in `sessionStorage`, not `localStorage`, to limit the window an XSS payload could exfiltrate a long-lived credential (see `admin/src/app/core/services/auth.service.ts`)
 
 ## Backend
 
