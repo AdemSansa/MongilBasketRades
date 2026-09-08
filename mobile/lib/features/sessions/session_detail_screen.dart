@@ -73,7 +73,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     try {
       await ref.read(sessionsRepositoryProvider).complete(widget.sessionId);
       await ref.read(todaySessionsControllerProvider.notifier).refresh();
-      if (mounted) setState(() => _future = _load());
+      if (mounted) {
+        setState(() {
+          _future = _load();
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -131,7 +135,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
           if (snapshot.hasError) {
             return ErrorView(
               message: snapshot.error.toString(),
-              onRetry: () => setState(() => _future = _load()),
+              onRetry: () => setState(() {
+                _future = _load();
+              }),
             );
           }
 

@@ -71,7 +71,9 @@ class _RegisterChildScreenState extends ConsumerState<RegisterChildScreen> {
           if (snapshot.hasError) {
             return ErrorView(
               message: snapshot.error.toString(),
-              onRetry: () => setState(() => _future = _load()),
+              onRetry: () => setState(() {
+                _future = _load();
+              }),
             );
           }
 

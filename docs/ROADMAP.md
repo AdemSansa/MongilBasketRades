@@ -2,6 +2,8 @@
 
 Tracks real progress against the phases defined in `PROJECT_SCOPE.md` §39. Update this file's checkboxes and "Current Status" block whenever a phase item is actually completed — this is the single source of truth for "where are we," not the phase checklists in PROJECT_SCOPE.md (those stay as the static plan).
 
+For login credentials to manually test each role, see [`docs/testing/test-accounts.md`](testing/test-accounts.md).
+
 ---
 
 ## Current Status
