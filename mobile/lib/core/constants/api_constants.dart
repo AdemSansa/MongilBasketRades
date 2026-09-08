@@ -16,4 +16,11 @@ class ApiConstants {
   static const String myChildren = '/parents/me/children';
 
   static String player(String id) => '/players/$id';
+
+  static const String seasons = '/seasons';
+  static const String groups = '/groups';
+  static const String registrations = '/registrations';
+  static const String myRegistrations = '/registrations/me';
+
+  static String registrationCancel(String id) => '/registrations/$id/cancel';
 }
