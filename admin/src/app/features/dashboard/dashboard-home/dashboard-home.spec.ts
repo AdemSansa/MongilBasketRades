@@ -1,3 +1,4 @@
+import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { DashboardHome } from './dashboard-home';
@@ -9,7 +10,7 @@ describe('DashboardHome', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DashboardHome],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), provideHttpClient()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardHome);

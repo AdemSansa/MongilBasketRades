@@ -1,6 +1,79 @@
 <h1>Dashboard</h1>
-<p class="placeholder-note">
-  Stats (total players, pending registrations, unpaid fees, today's sessions) arrive in Phase 10 once
-  those backend endpoints exist. For now, use the <a routerLink="/dashboard/registrations">Registrations</a>
-  page to review pending sign-ups.
-</p>
+
+@if (errorMessage()) {
+  <div class="error-banner">
+    {{ errorMessage() }}
+    <button type="button" (click)="load()">Retry</button>
+  </div>
+}
+
+@if (isLoading()) {
+  <p class="muted">Loading…</p>
+} @else if (dashboard(); as d) {
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-value">{{ d.totalPlayers }}</span>
+      <span class="stat-label">Total Players</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ d.activePlayers }}</span>
+      <span class="stat-label">Active Players</span>
+    </div>
+    <div class="stat-card" [class.highlight]="d.pendingRegistrations > 0">
+      <span class="stat-value">{{ d.pendingRegistrations }}</span>
+      <span class="stat-label">Pending Registrations</span>
+      <a routerLink="/dashboard/registrations">Review →</a>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ d.waitingList }}</span>
+      <span class="stat-label">Waiting List</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ d.activeCoaches }}</span>
+      <span class="stat-label">Active Coaches</span>
+    </div>
+    <div class="stat-card" [class.highlight]="d.unpaidFees > 0">
+      <span class="stat-value">{{ d.unpaidFees }}</span>
+      <span class="stat-label">Unpaid Fees</span>
+      <a routerLink="/dashboard/payments">Review →</a>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ d.upcomingSessionsCount }}</span>
+      <span class="stat-label">Upcoming Sessions</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ d.attendanceRate }}%</span>
+      <span class="stat-label">Attendance Overview</span>
+    </div>
+  </div>
+
+  <h2>Today ({{ d.todaysSessionsCount }})</h2>
+  @if (d.todaysSessions.length === 0) {
+    <p class="muted">No sessions scheduled for today.</p>
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Group</th>
+            <th>Time</th>
+            <th>Coach</th>
+            <th>Location</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (session of d.todaysSessions; track session.id) {
+            <tr>
+              <td>{{ session.groupName }}</td>
+              <td>{{ session.startTime.substring(0, 5) }}–{{ session.endTime.substring(0, 5) }}</td>
+              <td>{{ session.coachName }}</td>
+              <td>{{ session.location || '—' }}</td>
+              <td><span class="status-badge" [attr.data-status]="session.status">{{ session.status }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

@@ -1,14 +1,131 @@
 h1 {
-  margin: 0 0 12px;
+  margin: 0 0 20px;
   color: var(--brand-navy);
 }
 
-.placeholder-note {
+h2 {
+  margin: 28px 0 16px;
+  color: var(--brand-navy);
+  font-size: 18px;
+}
+
+.muted {
   color: var(--text-muted);
-  max-width: 480px;
-  line-height: 1.5;
+  font-size: 14px;
+}
+
+.error-banner {
+  background: #fdecea;
+  color: var(--error);
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+
+  button {
+    background: transparent;
+    border: 1px solid var(--error);
+    color: var(--error);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &.highlight {
+    border-left: 3px solid var(--brand-orange);
+  }
 
   a {
+    margin-top: 4px;
     color: var(--brand-orange);
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--brand-navy);
+}
+
+.stat-label {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  th,
+  td {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #eee;
+  color: #555;
+
+  &[data-status='SCHEDULED'] {
+    background: #e6eefc;
+    color: #1d4ed8;
+  }
+  &[data-status='COMPLETED'] {
+    background: #e3f7e8;
+    color: #1e7d34;
+  }
+  &[data-status='CANCELLED'] {
+    background: #fdecea;
+    color: var(--error);
   }
 }
