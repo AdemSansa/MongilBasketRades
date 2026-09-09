@@ -8,8 +8,8 @@ For login credentials to manually test each role, see [`docs/testing/test-accoun
 
 ## Current Status
 
-**Active phase:** Phase 10 — Dashboard (next)
-**Last updated:** 2026-09-09
+**Active phase:** Phase 11 — Notifications (next)
+**Last updated:** 2026-09-10
 
 **Architecture decision (2026-09-07):** the director/admin surface moves from "future Flutter routes" to a dedicated **Angular web app** (`admin/`, not yet scaffolded), used on PC. Flutter (`mobile/`) now covers **Coach + Parent only**. See `PROJECT_SCOPE.md` §2/§4 and the new "Angular Admin App" section below for what this changes.
 
@@ -34,11 +34,14 @@ For login credentials to manually test each role, see [`docs/testing/test-accoun
 - Found and fixed a third real bug during the same on-device pass: `setState(() => _future = _load())` (three call sites — `session_detail_screen.dart`'s `_completeSession` and its `ErrorView.onRetry`, and `register_child_screen.dart`'s `ErrorView.onRetry`) used an arrow-body closure, and an assignment expression evaluates to its right-hand value — so the closure returned the `Future` `_load()` produced instead of `void`, tripping Flutter's real "setState() callback argument returned a Future" assertion. This was the actual cause of the "error but it still completed" symptom seen earlier when testing Phase 8 — the action itself always succeeded, only the post-action screen refresh crashed. Fixed all three call sites with block-bodied closures; confirmed fixed live on device (marking a session complete no longer throws).
 - Phase 9 Payments: `Payment` entity/API — one record per player per billing period (`YYYY-MM`, unique constraint, corrected via PUT rather than duplicated, same reasoning as Attendance), `POST/PUT /api/payments`, `GET /api/payments` (admin, filterable by status/period/playerId via Specifications — applied that fix pattern proactively this time), `GET /api/payments/me` (parent), `GET /api/players/{id}/payments`. Angular: a Payments screen (admin-only) — filter chips, a create form, inline correction. Flutter: a "Payments" button on each approved child opens a per-month payment history list (§14's mockup). All three layers verified end-to-end: curl (duplicate-period 409, validation, ownership 403s), live in-browser (created + corrected a payment in Angular), and live on-device (parent saw both records, including the Angular-side correction, in the Flutter app).
 
+- Phase 10 Dashboard: `GET /api/dashboard/admin` (total/active players, pending registrations, waiting list, active coaches, today's/upcoming session counts + today's session list, unpaid fees, overall attendance rate) and `GET /api/dashboard/parent` (per child: current group, next upcoming session, own attendance rate, latest payment status). Angular: `dashboard-home` replaced its placeholder with a real stat-card grid + today's-sessions table, with Pending Registrations/Unpaid Fees cards linking straight to their review screens. Flutter: a "Next training: Sep 13, 09:00" line added to each approved child's card, the one piece of §17's mockup not already covered by earlier phases (attendance badge and payment status were already there). All verified end-to-end: curl against real data (252 players, 87.5% attendance), live in-browser, and live on-device.
+- **Dev machine's LAN IP changed mid-session** (192.168.100.105 → 192.168.100.2, apparently a DHCP lease renewal after the machine slept overnight) — this is what actually caused a genuine "unable to reach the server" on the phone, not an app bug. Updated `ApiConstants.baseUrl` (Flutter) and `API_BASE_URL` (Angular) to match. Worth checking `ipconfig`/`Get-NetIPAddress` first next time both clients suddenly can't connect, before assuming a code regression.
+
 **In progress:** nothing active right now.
 
-**Not started:** Phases 10–12, Deployment. Angular Players/Groups/Dashboard screens.
+**Not started:** Phases 11–12, Deployment. Angular Players/Groups screens.
 
-**Next up:** Phase 10 (Dashboard) — the admin stats screen (`docs/database` already has the shape: total/active players, pending registrations, waiting list, active coaches, today's/upcoming sessions, unpaid fees, attendance overview) plus a parent-facing summary per PROJECT_SCOPE §17.
+**Next up:** Phase 11 (Notifications) — per PROJECT_SCOPE §18, though note `docs/api/endpoints.md` explicitly defers `/announcements` and `/notifications` to "Version 2, not built in MVP." Worth confirming with the user whether to actually build this now or treat Phase 12 (Testing) as the real next step and revisit Notifications as a V2 item.
 
 **Known gaps carried forward:**
 - Flutter's "My Children" screen doesn't surface a rejection reason — once a registration is REJECTED, `parent_home_screen.dart` correctly treats it as inactive and re-offers the "Register" button (the intended re-registration fix from Phase 6), but the reason itself (visible in Angular's Registrations screen) isn't shown anywhere in the app. Confirmed with the user this is acceptable for now, not a blocker.
@@ -120,7 +123,7 @@ Login talks to a stub `AuthRepository` pointed at `POST /auth/login` — it will
 
 Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutter). Tracked separately because it's a third codebase sharing the same backend, decided on 2026-09-07 — see `PROJECT_SCOPE.md` §2/§4.
 
-**Status:** Live (2026-09-09) — auth, Registrations, Sessions, and Payments are fully working; Players/Groups/Dashboard remain.
+**Status:** Live (2026-09-10) — auth, Registrations, Sessions, Payments, and Dashboard are fully working; only Players/Groups remain as placeholders.
 
 - [x] Angular environment setup — Node 24, Angular CLI 22 (already installed)
 - [x] Scaffold `admin/` project — Angular 22, standalone components, signals, vitest
@@ -131,7 +134,7 @@ Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutt
 - [x] Registrations review (approve/reject/waiting list) — `features/registrations/registrations-list/`, the actual trigger for starting Angular, fully working: status filter chips, approve, reject with a required reason shown inline (not a browser `prompt()`)
 - [x] Sessions management — `features/sessions/sessions-list/`: list, create (group dropdown + date/time/location), cancel. Minimal but functional — no edit or "assign substitute coach" UI yet.
 - [x] Payments recording — `features/payments/payments-list/`: filter chips, record-payment form, inline correction. Verified live in-browser (2026-09-09).
-- [ ] Admin dashboard stats — needs Phase 10 backend endpoints
+- [x] Admin dashboard stats — `features/dashboard/dashboard-home/`: stat-card grid + today's-sessions table, real data via `GET /dashboard/admin`. Verified live in-browser (2026-09-10).
 
 ---
 
@@ -180,7 +183,14 @@ Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutt
 - [x] Admin payment dashboard — Angular `features/payments/payments-list/`: filter chips (All/Unpaid/Overdue/Partial/Paid), record-payment form, inline correction
 - [x] Parent payment view — Flutter `features/payments/player_payments_screen.dart`, opened via a "Payments" button on each approved child's card; per-month list matching §14's mockup
 
-## Phase 10 — Dashboard ⬜
+## Phase 10 — Dashboard ✅
+
+- [x] Admin stats — `GET /api/dashboard/admin`: total/active players, pending registrations, waiting list, active coaches, today's/upcoming session counts, unpaid fees, overall attendance rate, today's session list
+- [x] Coach dashboard — not built as a separate endpoint; Flutter's coach "Today" screen already covers §16 (today's sessions, attendance workflow) directly via `/sessions/today`, so a redundant `/dashboard/coach` wrapping the same data wasn't added
+- [x] Parent dashboard — `GET /api/dashboard/parent`: per child, current group, next upcoming session, own attendance rate, latest payment status
+- [x] Admin dashboard UI — Angular `features/dashboard/dashboard-home/`: stat-card grid + today's-sessions table, replacing the Phase-0 placeholder
+- [x] Parent dashboard UI — Flutter: "Next training" line added to `parent_home_screen.dart`'s child cards (the one §17 element not already covered by the attendance badge and Payments button from Phases 8–9)
+
 ## Phase 11 — Notifications ⬜
 ## Phase 12 — Testing ⬜
 ## Deployment ⬜
