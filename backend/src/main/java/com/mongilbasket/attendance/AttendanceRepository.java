@@ -12,6 +12,8 @@ public interface AttendanceRepository extends JpaRepository<Attendance, UUID> {
 
     List<Attendance> findBySessionId(UUID sessionId);
 
+    long countByStatus(AttendanceStatus status);
+
     Optional<Attendance> findBySessionIdAndPlayerId(UUID sessionId, UUID playerId);
 
     @Query("SELECT a FROM Attendance a WHERE a.player.id = :playerId ORDER BY a.session.date DESC, a.session.startTime DESC")

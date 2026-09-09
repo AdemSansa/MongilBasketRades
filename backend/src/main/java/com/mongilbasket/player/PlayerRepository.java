@@ -13,6 +13,8 @@ public interface PlayerRepository extends JpaRepository<Player, UUID> {
 
     long countByCurrentGroupIdAndStatus(UUID currentGroupId, PlayerStatus status);
 
+    long countByStatus(PlayerStatus status);
+
     List<Player> findByCurrentGroupIdAndStatus(UUID currentGroupId, PlayerStatus status);
 
     // CAST(:search AS string) works around Postgres failing to infer a type

@@ -13,6 +13,8 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
 
     List<Registration> findByParentId(UUID parentId);
 
+    long countByStatus(RegistrationStatus status);
+
     @Query("SELECT r FROM Registration r WHERE "
             + "(:status IS NULL OR r.status = :status) AND "
             + "(:seasonId IS NULL OR r.season.id = :seasonId) AND "

@@ -14,4 +14,6 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID>, JpaSpec
     List<Payment> findByPlayerIdOrderByPeriodDesc(UUID playerId);
 
     List<Payment> findByParentIdOrderByPeriodDesc(UUID parentId);
+
+    long countByStatusIn(List<PaymentStatus> statuses);
 }

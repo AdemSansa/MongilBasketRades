@@ -1,5 +1,8 @@
 package com.mongilbasket.session;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +20,13 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  */
 public interface TrainingSessionRepository
         extends JpaRepository<TrainingSession, UUID>, JpaSpecificationExecutor<TrainingSession> {
+
+    List<TrainingSession> findByDateOrderByStartTimeAsc(LocalDate date);
+
+    long countByDate(LocalDate date);
+
+    long countByDateAfterAndStatus(LocalDate date, SessionStatus status);
+
+    Optional<TrainingSession> findFirstByGroupIdAndDateGreaterThanEqualAndStatusOrderByDateAscStartTimeAsc(
+            UUID groupId, LocalDate date, SessionStatus status);
 }
