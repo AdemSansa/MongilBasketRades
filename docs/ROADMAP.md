@@ -8,8 +8,8 @@ For login credentials to manually test each role, see [`docs/testing/test-accoun
 
 ## Current Status
 
-**Active phase:** Phase 9 — Payments (next)
-**Last updated:** 2026-09-08
+**Active phase:** Phase 10 — Dashboard (next)
+**Last updated:** 2026-09-09
 
 **Architecture decision (2026-09-07):** the director/admin surface moves from "future Flutter routes" to a dedicated **Angular web app** (`admin/`, not yet scaffolded), used on PC. Flutter (`mobile/`) now covers **Coach + Parent only**. See `PROJECT_SCOPE.md` §2/§4 and the new "Angular Admin App" section below for what this changes.
 
@@ -31,12 +31,14 @@ For login credentials to manually test each role, see [`docs/testing/test-accoun
   - **Admin couldn't create parent accounts.** `UserService.createUser()` hard-rejected `role=PARENT` on the assumption that parents only self-register via `/auth/register` — which turned out not to match the academy's actual workflow (the admin/secretary registers parents, same as the 245 imported accounts). Parents now get the same admin-creation path as coaches (`POST /api/users`, auto-creates the linked `Parent` profile); `/auth/register` is left in place as an alternate path, not removed.
   - **Coach dashboard session cards became untappable once a session left SCHEDULED status.** `_SessionCard`'s trailing slot held the only navigation control (a "Roster" button, shown only when `status == SCHEDULED`); completing a session swapped it for a plain status Chip with no `onTap` anywhere on the tile, so there was no way back into a completed session at all — including to review or correct attendance already taken. Fixed by moving navigation onto the `ListTile.onTap` (always active) and making the trailing purely cosmetic.
 - **Self-registration was deliberately not built for Flutter** (no `/auth/register` screen) — confirmed as correct, not a gap: parent accounts are admin-created, matching the fix above.
+- Found and fixed a third real bug during the same on-device pass: `setState(() => _future = _load())` (three call sites — `session_detail_screen.dart`'s `_completeSession` and its `ErrorView.onRetry`, and `register_child_screen.dart`'s `ErrorView.onRetry`) used an arrow-body closure, and an assignment expression evaluates to its right-hand value — so the closure returned the `Future` `_load()` produced instead of `void`, tripping Flutter's real "setState() callback argument returned a Future" assertion. This was the actual cause of the "error but it still completed" symptom seen earlier when testing Phase 8 — the action itself always succeeded, only the post-action screen refresh crashed. Fixed all three call sites with block-bodied closures; confirmed fixed live on device (marking a session complete no longer throws).
+- Phase 9 Payments: `Payment` entity/API — one record per player per billing period (`YYYY-MM`, unique constraint, corrected via PUT rather than duplicated, same reasoning as Attendance), `POST/PUT /api/payments`, `GET /api/payments` (admin, filterable by status/period/playerId via Specifications — applied that fix pattern proactively this time), `GET /api/payments/me` (parent), `GET /api/players/{id}/payments`. Angular: a Payments screen (admin-only) — filter chips, a create form, inline correction. Flutter: a "Payments" button on each approved child opens a per-month payment history list (§14's mockup). All three layers verified end-to-end: curl (duplicate-period 409, validation, ownership 403s), live in-browser (created + corrected a payment in Angular), and live on-device (parent saw both records, including the Angular-side correction, in the Flutter app).
 
 **In progress:** nothing active right now.
 
-**Not started:** Phases 9–12, Deployment. Angular Players/Groups/Payments/Dashboard screens.
+**Not started:** Phases 10–12, Deployment. Angular Players/Groups/Dashboard screens.
 
-**Next up:** Phase 9 (Payments) — payment recording against a player/season, Angular UI for it (admin-only, same pattern as Registrations/Sessions).
+**Next up:** Phase 10 (Dashboard) — the admin stats screen (`docs/database` already has the shape: total/active players, pending registrations, waiting list, active coaches, today's/upcoming sessions, unpaid fees, attendance overview) plus a parent-facing summary per PROJECT_SCOPE §17.
 
 **Known gaps carried forward:**
 - Flutter's "My Children" screen doesn't surface a rejection reason — once a registration is REJECTED, `parent_home_screen.dart` correctly treats it as inactive and re-offers the "Register" button (the intended re-registration fix from Phase 6), but the reason itself (visible in Angular's Registrations screen) isn't shown anywhere in the app. Confirmed with the user this is acceptable for now, not a blocker.
@@ -118,17 +120,17 @@ Login talks to a stub `AuthRepository` pointed at `POST /auth/login` — it will
 
 Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutter). Tracked separately because it's a third codebase sharing the same backend, decided on 2026-09-07 — see `PROJECT_SCOPE.md` §2/§4.
 
-**Status:** Scaffolded and live (2026-09-08) — auth + Registrations review are fully working; Players/Groups/Sessions/Payments/Dashboard remain.
+**Status:** Live (2026-09-09) — auth, Registrations, Sessions, and Payments are fully working; Players/Groups/Dashboard remain.
 
 - [x] Angular environment setup — Node 24, Angular CLI 22 (already installed)
 - [x] Scaffold `admin/` project — Angular 22, standalone components, signals, vitest
 - [x] Auth: login screen, JWT storage (access token in memory, refresh token in `sessionStorage` — see `auth.service.ts` for the reasoning), route guard (`core/guards/auth.guard.ts`)
 - [x] Admin dashboard shell — sidebar nav (`features/dashboard/dashboard-shell/`)
-- [ ] Players management UI (list/search/filter/create/edit/archive) — backend ready since Phase 4, placeholder page exists, not built yet
+- [ ] Players management UI (list/search/filter/create/edit/archive) — backend ready since Phase 4, placeholder page exists, not built yet. A minimal read-only `PlayersService` now exists (`core/services/players.service.ts`) purely to feed the Payments screen's player picker — not a start on this item.
 - [ ] Groups/Seasons management — backend ready since Phase 5, placeholder page exists, not built yet
 - [x] Registrations review (approve/reject/waiting list) — `features/registrations/registrations-list/`, the actual trigger for starting Angular, fully working: status filter chips, approve, reject with a required reason shown inline (not a browser `prompt()`)
 - [x] Sessions management — `features/sessions/sessions-list/`: list, create (group dropdown + date/time/location), cancel. Minimal but functional — no edit or "assign substitute coach" UI yet.
-- [ ] Payments recording — needs Phase 9 backend first
+- [x] Payments recording — `features/payments/payments-list/`: filter chips, record-payment form, inline correction. Verified live in-browser (2026-09-09).
 - [ ] Admin dashboard stats — needs Phase 10 backend endpoints
 
 ---
@@ -167,9 +169,17 @@ Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutt
 - [x] Mark attendance — `POST /api/attendance` (bulk upsert: create or correct any number of marks in one call)
 - [x] Attendance history — `GET /api/players/{id}/attendance` (per-record history + totals)
 - [x] Attendance percentage — same endpoint, `attendanceRate` field (present/total × 100, rounded to 1 decimal)
-- [x] Flutter attendance UI — `session_detail_screen.dart` tap-to-mark chips per roster player + "All present" bulk shortcut (§38 weekend-mode priority); `parent_home_screen.dart` shows a color-coded rate badge per approved child. Not yet visually verified on-device (see Known gaps).
+- [x] Flutter attendance UI — `session_detail_screen.dart` tap-to-mark chips per roster player + "All present" bulk shortcut (§38 weekend-mode priority); `parent_home_screen.dart` shows a color-coded rate badge per approved child. Verified live on device 2026-09-08/09.
 
-## Phase 9 — Payments ⬜
+## Phase 9 — Payments ✅
+
+- [x] Payment entity — `backend/src/main/java/com/mongilbasket/payment/Payment.java` (unique constraint on player_id+period, corrected via PUT rather than duplicated)
+- [x] Record payment — `POST /api/payments` (ADMIN, 409 on duplicate player+period)
+- [x] Payment status — PAID/PARTIAL/UNPAID/OVERDUE, correctable via `PUT /api/payments/{id}`
+- [x] Payment history — `GET /api/players/{id}/payments` (ADMIN or owning PARENT), `GET /api/payments/me` (PARENT, all children)
+- [x] Admin payment dashboard — Angular `features/payments/payments-list/`: filter chips (All/Unpaid/Overdue/Partial/Paid), record-payment form, inline correction
+- [x] Parent payment view — Flutter `features/payments/player_payments_screen.dart`, opened via a "Payments" button on each approved child's card; per-month list matching §14's mockup
+
 ## Phase 10 — Dashboard ⬜
 ## Phase 11 — Notifications ⬜
 ## Phase 12 — Testing ⬜
