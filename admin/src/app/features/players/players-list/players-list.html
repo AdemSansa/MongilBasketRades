@@ -1,0 +1,103 @@
+<h1>Players</h1>
+
+<div class="toolbar">
+  <input
+    type="text"
+    placeholder="Search by name…"
+    [ngModel]="searchTerm()"
+    (ngModelChange)="searchTerm.set($event)"
+    (keyup.enter)="search()"
+  />
+  <button type="button" class="primary" (click)="search()">Search</button>
+</div>
+
+<div class="filters">
+  @for (filter of statusFilters; track filter.label) {
+    <button
+      type="button"
+      class="filter-chip"
+      [class.active]="activeFilter() === filter.value"
+      (click)="setFilter(filter.value)"
+    >
+      {{ filter.label }}
+    </button>
+  }
+</div>
+
+@if (errorMessage()) {
+  <div class="error-banner">
+    {{ errorMessage() }}
+    <button type="button" (click)="load()">Retry</button>
+  </div>
+}
+
+@if (isLoading()) {
+  <p class="muted">Loading…</p>
+} @else if (players().length === 0) {
+  <p class="muted">No players in this filter.</p>
+} @else {
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Age</th>
+          <th>Group</th>
+          <th>Status</th>
+          <th>Registered</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (player of players(); track player.id) {
+          <tr>
+            <td>{{ player.firstName }} {{ player.lastName }}</td>
+            <td>{{ age(player.dateOfBirth) }}</td>
+            <td>{{ groupName(player.currentGroupId) }}</td>
+            <td><span class="status-badge" [attr.data-status]="player.status">{{ player.status }}</span></td>
+            <td>{{ player.registrationDate | date: 'mediumDate' }}</td>
+            <td>
+              @if (editingId() === player.id) {
+                <form class="edit-inline" [formGroup]="editForm" (ngSubmit)="confirmEdit(player)">
+                  <input type="text" placeholder="First name" formControlName="firstName" />
+                  <input type="text" placeholder="Last name" formControlName="lastName" />
+                  <input type="date" formControlName="dateOfBirth" />
+                  <select formControlName="gender">
+                    <option value="">—</option>
+                    <option value="MALE">MALE</option>
+                    <option value="FEMALE">FEMALE</option>
+                  </select>
+                  <input type="text" placeholder="Emergency contact" formControlName="emergencyContactName" />
+                  <input type="text" placeholder="Emergency phone" formControlName="emergencyContactPhone" />
+                  <input type="text" placeholder="Medical notes" formControlName="medicalNotes" />
+                  <button type="submit" class="primary" [disabled]="actionInFlightId() === player.id">
+                    Save
+                  </button>
+                  <button type="button" (click)="cancelEdit()">Cancel</button>
+                </form>
+              } @else if (archivingId() === player.id) {
+                <div class="confirm-inline">
+                  <span>Archive this player?</span>
+                  <button
+                    type="button"
+                    class="danger"
+                    [disabled]="actionInFlightId() === player.id"
+                    (click)="confirmArchive(player)"
+                  >
+                    Confirm
+                  </button>
+                  <button type="button" (click)="cancelArchive()">Cancel</button>
+                </div>
+              } @else {
+                <button type="button" class="primary" (click)="startEdit(player)">Edit</button>
+                @if (player.status === 'ACTIVE') {
+                  <button type="button" class="danger" (click)="startArchive(player)">Archive</button>
+                }
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

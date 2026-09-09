@@ -4,7 +4,12 @@ export interface Player {
   lastName: string;
   dateOfBirth: string;
   gender: string | null;
+  photoUrl: string | null;
+  medicalNotes: string | null;
+  emergencyContactName: string | null;
+  emergencyContactPhone: string | null;
   status: string;
+  registrationDate: string;
   parentId: string;
   currentGroupId: string | null;
 }

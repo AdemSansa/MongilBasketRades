@@ -30,16 +30,12 @@ export const routes: Routes = [
       {
         path: 'players',
         loadComponent: () =>
-          import('./features/players/players-placeholder/players-placeholder').then(
-            (m) => m.PlayersPlaceholder,
-          ),
+          import('./features/players/players-list/players-list').then((m) => m.PlayersList),
       },
       {
         path: 'groups',
         loadComponent: () =>
-          import('./features/groups/groups-placeholder/groups-placeholder').then(
-            (m) => m.GroupsPlaceholder,
-          ),
+          import('./features/groups/groups-list/groups-list').then((m) => m.GroupsList),
       },
       {
         path: 'sessions',
