@@ -5,6 +5,7 @@ import '../../shared/widgets/error_view.dart';
 import '../../shared/widgets/loading_view.dart';
 import '../attendance/attendance_providers.dart';
 import '../auth/auth_controller.dart';
+import '../payments/player_payments_screen.dart';
 import '../players/add_child_screen.dart';
 import '../players/player.dart';
 import '../players/players_controller.dart';
@@ -171,6 +172,20 @@ class _ChildCard extends ConsumerWidget {
                   onPressed: () =>
                       ref.read(myRegistrationsControllerProvider.notifier).cancel(registration!.id),
                   child: const Text('Cancel registration'),
+                ),
+              ),
+            ),
+          if (!isArchived && isApproved)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => PlayerPaymentsScreen(player: child)),
+                  ),
+                  icon: const Icon(Icons.payments_outlined),
+                  label: const Text('Payments'),
                 ),
               ),
             ),

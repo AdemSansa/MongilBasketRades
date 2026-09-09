@@ -34,4 +34,6 @@ class ApiConstants {
 
   static String attendanceForSession(String sessionId) => '/attendance/session/$sessionId';
   static String playerAttendance(String playerId) => '/players/$playerId/attendance';
+
+  static String playerPayments(String playerId) => '/players/$playerId/payments';
 }
