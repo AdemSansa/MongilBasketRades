@@ -46,6 +46,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/sessions/sessions-list/sessions-list').then((m) => m.SessionsList),
       },
+      {
+        path: 'payments',
+        loadComponent: () =>
+          import('./features/payments/payments-list/payments-list').then((m) => m.PaymentsList),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

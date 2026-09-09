@@ -1,0 +1,150 @@
+<div class="header-row">
+  <h1>Payments</h1>
+  <button type="button" class="primary" (click)="toggleForm()">
+    {{ showForm() ? 'Cancel' : '+ Record Payment' }}
+  </button>
+</div>
+
+@if (showForm()) {
+  <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
+    <label>
+      Player
+      <select formControlName="playerId">
+        <option value="" disabled>Select a player</option>
+        @for (player of players(); track player.id) {
+          <option [value]="player.id">{{ player.firstName }} {{ player.lastName }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Period (YYYY-MM)
+      <input type="text" formControlName="period" placeholder="2026-09" />
+    </label>
+
+    <label>
+      Amount
+      <input type="number" step="0.01" formControlName="amount" />
+    </label>
+
+    <label>
+      Status
+      <select formControlName="status">
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ status }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Method (optional)
+      <select formControlName="method">
+        <option [value]="null">—</option>
+        @for (method of methods; track method) {
+          <option [value]="method">{{ method }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Payment date (optional)
+      <input type="date" formControlName="paymentDate" />
+    </label>
+
+    <label>
+      Reference (optional)
+      <input type="text" formControlName="reference" />
+    </label>
+
+    <label>
+      Notes (optional)
+      <input type="text" formControlName="notes" />
+    </label>
+
+    <button type="submit" class="primary" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Recording…' : 'Record payment' }}
+    </button>
+  </form>
+}
+
+<div class="filters">
+  @for (filter of statusFilters; track filter.label) {
+    <button
+      type="button"
+      class="filter-chip"
+      [class.active]="activeFilter() === filter.value"
+      (click)="setFilter(filter.value)"
+    >
+      {{ filter.label }}
+    </button>
+  }
+</div>
+
+@if (errorMessage()) {
+  <div class="error-banner">
+    {{ errorMessage() }}
+    <button type="button" (click)="load()">Retry</button>
+  </div>
+}
+
+@if (isLoading()) {
+  <p class="muted">Loading…</p>
+} @else if (payments().length === 0) {
+  <p class="muted">No payments in this filter.</p>
+} @else {
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Period</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Method</th>
+          <th>Paid on</th>
+          <th>Reference</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (payment of payments(); track payment.id) {
+          <tr>
+            <td>{{ payment.playerName }}</td>
+            <td>{{ payment.period }}</td>
+            <td>{{ payment.amount }} {{ payment.currency }}</td>
+            <td><span class="status-badge" [attr.data-status]="payment.status">{{ payment.status }}</span></td>
+            <td>{{ payment.method || '—' }}</td>
+            <td>{{ payment.paymentDate ? (payment.paymentDate | date: 'mediumDate') : '—' }}</td>
+            <td>{{ payment.reference || '—' }}</td>
+            <td>
+              @if (editingId() === payment.id) {
+                <form class="edit-inline" [formGroup]="editForm" (ngSubmit)="confirmEdit(payment)">
+                  <input type="number" step="0.01" formControlName="amount" />
+                  <select formControlName="status">
+                    @for (status of statuses; track status) {
+                      <option [value]="status">{{ status }}</option>
+                    }
+                  </select>
+                  <select formControlName="method">
+                    <option [value]="null">—</option>
+                    @for (method of methods; track method) {
+                      <option [value]="method">{{ method }}</option>
+                    }
+                  </select>
+                  <input type="date" formControlName="paymentDate" />
+                  <input type="text" placeholder="Reference" formControlName="reference" />
+                  <button type="submit" class="primary" [disabled]="actionInFlightId() === payment.id">
+                    Save
+                  </button>
+                  <button type="button" (click)="cancelEdit()">Cancel</button>
+                </form>
+              } @else {
+                <button type="button" class="primary" (click)="startEdit(payment)">Edit</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
