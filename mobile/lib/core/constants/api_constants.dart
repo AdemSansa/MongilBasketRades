@@ -5,7 +5,7 @@ class ApiConstants {
   // the backend over Wi-Fi this way. Swap for 10.0.2.2 (the Android
   // emulator's host alias) if testing on an emulator instead, or for a
   // real deployed URL once the backend is hosted somewhere.
-  static const String baseUrl = 'http://192.168.100.105:8080/api';
+  static const String baseUrl = 'http://192.168.100.2:8080/api';
 
   static const String login = '/auth/login';
   static const String refresh = '/auth/refresh';
@@ -36,4 +36,6 @@ class ApiConstants {
   static String playerAttendance(String playerId) => '/players/$playerId/attendance';
 
   static String playerPayments(String playerId) => '/players/$playerId/payments';
+
+  static const String parentDashboard = '/dashboard/parent';
 }

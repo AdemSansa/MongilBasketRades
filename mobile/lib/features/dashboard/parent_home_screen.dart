@@ -12,6 +12,7 @@ import '../players/players_controller.dart';
 import '../registrations/register_child_screen.dart';
 import '../registrations/registration.dart';
 import '../registrations/registrations_controller.dart';
+import 'parent_dashboard_providers.dart';
 
 class ParentHomeScreen extends ConsumerWidget {
   const ParentHomeScreen({super.key});
@@ -139,10 +140,17 @@ class _ChildCard extends ConsumerWidget {
           ListTile(
             leading: const CircleAvatar(child: Icon(Icons.person)),
             title: Text(child.fullName),
-            subtitle: Text(
-              registration != null
-                  ? '${child.age} years old · ${registration!.requestedGroupName} — ${registration!.statusLabel}'
-                  : '${child.age} years old',
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  registration != null
+                      ? '${child.age} years old · ${registration!.requestedGroupName} — ${registration!.statusLabel}'
+                      : '${child.age} years old',
+                ),
+                if (!isArchived && isApproved) _NextTrainingLine(playerId: child.id),
+              ],
             ),
             trailing: isArchived
                 ? const Chip(label: Text('Archived'))
@@ -191,6 +199,33 @@ class _ChildCard extends ConsumerWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _NextTrainingLine extends ConsumerWidget {
+  const _NextTrainingLine({required this.playerId});
+
+  final String playerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dashboard = ref.watch(parentDashboardProvider);
+    return dashboard.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (children) {
+        final summary = children.where((c) => c.playerId == playerId).firstOrNull;
+        final label = summary?.nextTrainingLabel;
+        if (label == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            'Next training: $label',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        );
+      },
     );
   }
 }
