@@ -36,10 +36,11 @@ For login credentials to manually test each role, see [`docs/testing/test-accoun
 
 - Phase 10 Dashboard: `GET /api/dashboard/admin` (total/active players, pending registrations, waiting list, active coaches, today's/upcoming session counts + today's session list, unpaid fees, overall attendance rate) and `GET /api/dashboard/parent` (per child: current group, next upcoming session, own attendance rate, latest payment status). Angular: `dashboard-home` replaced its placeholder with a real stat-card grid + today's-sessions table, with Pending Registrations/Unpaid Fees cards linking straight to their review screens. Flutter: a "Next training: Sep 13, 09:00" line added to each approved child's card, the one piece of §17's mockup not already covered by earlier phases (attendance badge and payment status were already there). All verified end-to-end: curl against real data (252 players, 87.5% attendance), live in-browser, and live on-device.
 - **Dev machine's LAN IP changed mid-session** (192.168.100.105 → 192.168.100.2, apparently a DHCP lease renewal after the machine slept overnight) — this is what actually caused a genuine "unable to reach the server" on the phone, not an app bug. Updated `ApiConstants.baseUrl` (Flutter) and `API_BASE_URL` (Angular) to match. Worth checking `ipconfig`/`Get-NetIPAddress` first next time both clients suddenly can't connect, before assuming a code regression.
+- **Angular Players & Groups screens** (`features/players/players-list/`, `features/groups/groups-list/`) — the last real gap for daily admin use, replacing the two remaining placeholders. Players: search, status filter, inline edit, archive (inline confirm, not `window.confirm()`). Groups: create, inline edit, Activate/Deactivate toggle, season/coach dropdowns. Found and fixed two real backend bugs while building the coach dropdown: `Group.coachId` is the `Coach` entity's own id, not the linked `User`'s (they're different primary keys, same pattern as `Parent`) — resolving it against `/api/users` silently rendered every coach as a raw UUID instead of a name; added `GET /api/coaches` (new `CoachController`/`CoachService`/`CoachResponse`) keyed correctly, which then surfaced a `LazyInitializationException` from mapping `Coach.user` (lazy-loaded) outside a transaction, fixed by moving the mapping into a proper `@Transactional(readOnly = true)` service method. Verified live in-browser: searched/edited/archived a player (confirmed via curl), created and deactivated a group with a real coach assigned.
 
 **In progress:** nothing active right now.
 
-**Not started:** Phases 11–12, Deployment. Angular Players/Groups screens.
+**Not started:** Phase 11 (Notifications, pending the decision below), Phase 12 (Testing), Deployment.
 
 **Next up:** Phase 11 (Notifications) — per PROJECT_SCOPE §18, though note `docs/api/endpoints.md` explicitly defers `/announcements` and `/notifications` to "Version 2, not built in MVP." Worth confirming with the user whether to actually build this now or treat Phase 12 (Testing) as the real next step and revisit Notifications as a V2 item.
 
@@ -49,7 +50,7 @@ For login credentials to manually test each role, see [`docs/testing/test-accoun
 - Refresh-token revocation is stateless-JWT-only for now (no DB-backed revocable store) — a deliberate MVP simplification, noted in `docs/api/endpoints.md` and `AuthController.logout()`.
 - A prior backend attempt (Flyway migrations, bigint IDs, a proper revocable `refresh_tokens` table) was found already running against the dev Postgres container but not on disk anywhere in this repo; per user decision it was treated as disposable test data and dropped in favor of the fresh Phase 3 build. If that other implementation resurfaces, reconcile deliberately rather than assuming this one wins.
 - Coach-only Flutter player screens (list, search/filter — read-only, own groups) aren't built yet. Coach visibility also still isn't scoped to "their groups" (every coach sees every player in `PlayerService.list()`) — Group now exists so this is no longer blocked, just not done yet; worth fixing whenever the coach player-list screen actually gets built.
-- Admin player management (list/search/filter/edit/archive) has no UI at all right now — not a Flutter gap anymore, it's Angular scope. See "Angular Admin App" below.
+- Players screen has no create form (by design — players are created by parents in Flutter, or admin-driven account creation; a "create player for a given parent" flow would need a parent picker that doesn't exist as its own screen yet).
 - `Season.active` uniqueness ("only one active season") is enforced in `SeasonService`, not a DB constraint — matches the original plan in `docs/database/erd.md` ("simpler for v1, revisit if it becomes a real bug source").
 - 196 imported players have a placeholder DOB (2000-01-01, flagged in `medicalNotes`) since the source spreadsheet didn't have real ones — the admin/coach screens will need a way to surface/filter these for follow-up once built (e.g. an Angular Players screen sort-by-flagged-notes, or just a manual query for now).
 - All 241 imported parent accounts are synthetic (no real parent name/email in the source data, just a generated placeholder) — they can't log in for real; if a parent wants app access, an admin-assisted account-claiming/password-reset flow would need to exist first (not built).
@@ -119,18 +120,18 @@ Login talks to a stub `AuthRepository` pointed at `POST /auth/login` — it will
 
 ---
 
-## Angular Admin App (Director) — parallel workstream 🔄
+## Angular Admin App (Director) — parallel workstream ✅
 
 Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutter). Tracked separately because it's a third codebase sharing the same backend, decided on 2026-09-07 — see `PROJECT_SCOPE.md` §2/§4.
 
-**Status:** Live (2026-09-10) — auth, Registrations, Sessions, Payments, and Dashboard are fully working; only Players/Groups remain as placeholders.
+**Status:** Fully live (2026-09-10) — every screen in this list is built and working; no placeholders remain.
 
 - [x] Angular environment setup — Node 24, Angular CLI 22 (already installed)
 - [x] Scaffold `admin/` project — Angular 22, standalone components, signals, vitest
 - [x] Auth: login screen, JWT storage (access token in memory, refresh token in `sessionStorage` — see `auth.service.ts` for the reasoning), route guard (`core/guards/auth.guard.ts`)
 - [x] Admin dashboard shell — sidebar nav (`features/dashboard/dashboard-shell/`)
-- [ ] Players management UI (list/search/filter/create/edit/archive) — backend ready since Phase 4, placeholder page exists, not built yet. A minimal read-only `PlayersService` now exists (`core/services/players.service.ts`) purely to feed the Payments screen's player picker — not a start on this item.
-- [ ] Groups/Seasons management — backend ready since Phase 5, placeholder page exists, not built yet
+- [x] Players management UI — `features/players/players-list/`: search, status filter, inline edit, archive. No create form (players are created by parents in Flutter or admin-driven account creation, not from this screen — see Known gaps).
+- [x] Groups/Seasons management — `features/groups/groups-list/`: create, inline edit, Activate/Deactivate toggle, season/coach dropdowns
 - [x] Registrations review (approve/reject/waiting list) — `features/registrations/registrations-list/`, the actual trigger for starting Angular, fully working: status filter chips, approve, reject with a required reason shown inline (not a browser `prompt()`)
 - [x] Sessions management — `features/sessions/sessions-list/`: list, create (group dropdown + date/time/location), cancel. Minimal but functional — no edit or "assign substitute coach" UI yet.
 - [x] Payments recording — `features/payments/payments-list/`: filter chips, record-payment form, inline correction. Verified live in-browser (2026-09-09).
