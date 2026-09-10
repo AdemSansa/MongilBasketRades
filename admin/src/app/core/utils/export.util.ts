@@ -67,13 +67,19 @@ const STATUS_ABBREVIATION: Record<string, string> = {
   EXCUSED: 'E',
 };
 
-function renderGroupTable(doc: jsPDF, group: GroupAttendanceReport, startY: number): number {
+function renderGroupTable(
+  doc: jsPDF,
+  group: GroupAttendanceReport,
+  startY: number,
+  paidThisMonth: (playerId: string) => string,
+): number {
   const dateColumns = group.sessions.map((s) => s.date.slice(5));
-  const head = [['Player', ...dateColumns, 'Rate']];
+  const head = [['Player', ...dateColumns, 'Rate', 'Paid']];
   const body = group.players.map((row) => [
     row.playerName,
     ...group.sessions.map((s) => STATUS_ABBREVIATION[row.marksBySessionId[s.id]] ?? '—'),
     `${row.rate}%`,
+    paidThisMonth(row.playerId),
   ]);
 
   autoTable(doc, {
@@ -89,7 +95,11 @@ function renderGroupTable(doc: jsPDF, group: GroupAttendanceReport, startY: numb
   return (doc as any).lastAutoTable.finalY + 10;
 }
 
-export function exportMonthlyAttendancePdf(report: MonthlyAttendanceReport, coachLabel: string): void {
+export function exportMonthlyAttendancePdf(
+  report: MonthlyAttendanceReport,
+  coachLabel: string,
+  paidThisMonth: (playerId: string) => string,
+): void {
   const doc = new jsPDF({ orientation: 'landscape' });
   const monthLabel = `${MONTH_NAMES[report.month - 1]} ${report.year}`;
 
@@ -115,8 +125,11 @@ export function exportMonthlyAttendancePdf(report: MonthlyAttendanceReport, coac
       if (group.sessions.length === 0) {
         doc.setFontSize(10);
         doc.text('No sessions recorded this month.', 14, y + 6);
-      } else {
-        renderGroupTable(doc, group, y);
+        y += 12;
+      }
+
+      if (group.players.length > 0) {
+        renderGroupTable(doc, group, y, paidThisMonth);
       }
     });
   }

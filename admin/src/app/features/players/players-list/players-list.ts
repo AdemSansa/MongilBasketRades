@@ -150,20 +150,20 @@ export class PlayersList {
     }
   }
 
+  private async paidThisPeriodResolver(period: string): Promise<(playerId: string) => string> {
+    const payments = await this.paymentsService.list(null, period);
+    const statusByPlayerId = new Map(payments.map((p) => [p.playerId, p.status]));
+    return (playerId) => statusByPlayerId.get(playerId) ?? 'No Record';
+  }
+
   async exportExcel(): Promise<void> {
     this.isExportingExcel.set(true);
     this.errorMessage.set(null);
     try {
       const now = new Date();
       const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const payments = await this.paymentsService.list(null, currentPeriod);
-      const statusByPlayerId = new Map(payments.map((p) => [p.playerId, p.status]));
-
-      exportPlayersToExcel(
-        this.players(),
-        (groupId) => this.groupName(groupId),
-        (playerId) => statusByPlayerId.get(playerId) ?? 'No Record',
-      );
+      const paidThisMonth = await this.paidThisPeriodResolver(currentPeriod);
+      exportPlayersToExcel(this.players(), (groupId) => this.groupName(groupId), paidThisMonth);
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {
@@ -246,10 +246,14 @@ export class PlayersList {
     this.pdfError.set(null);
     try {
       const coachId = this.pdfCoachId() || null;
-      const report = await this.reportsService.monthlyAttendance(this.pdfYear(), this.pdfMonth(), coachId);
+      const period = `${this.pdfYear()}-${String(this.pdfMonth()).padStart(2, '0')}`;
+      const [report, paidThisMonth] = await Promise.all([
+        this.reportsService.monthlyAttendance(this.pdfYear(), this.pdfMonth(), coachId),
+        this.paidThisPeriodResolver(period),
+      ]);
       const coach = coachId ? this.coaches().find((c) => c.id === coachId) : null;
       const coachLabel = coach ? `${coach.firstName} ${coach.lastName}` : 'All Coaches';
-      exportMonthlyAttendancePdf(report, coachLabel);
+      exportMonthlyAttendancePdf(report, coachLabel, paidThisMonth);
     } catch (error) {
       this.pdfError.set(extractErrorMessage(error));
     } finally {
