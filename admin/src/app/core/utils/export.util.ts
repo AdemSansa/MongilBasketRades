@@ -26,7 +26,11 @@ function ageFromDob(dateOfBirth: string): number {
   return years;
 }
 
-export function exportPlayersToExcel(players: Player[], groupName: (groupId: string | null) => string): void {
+export function exportPlayersToExcel(
+  players: Player[],
+  groupName: (groupId: string | null) => string,
+  paidThisMonth: (playerId: string) => string,
+): void {
   const rows = players.map((p) => ({
     'First Name': p.firstName,
     'Last Name': p.lastName,
@@ -36,6 +40,7 @@ export function exportPlayersToExcel(players: Player[], groupName: (groupId: str
     Group: groupName(p.currentGroupId),
     Status: p.status,
     Registered: p.registrationDate,
+    'Paid This Month': paidThisMonth(p.id),
     'Emergency Contact': p.emergencyContactName ?? '',
     'Emergency Phone': p.emergencyContactPhone ?? '',
     'Medical Notes': p.medicalNotes ?? '',

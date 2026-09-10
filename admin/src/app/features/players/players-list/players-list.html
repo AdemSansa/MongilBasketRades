@@ -1,7 +1,9 @@
 <div class="header-row">
   <h1>Players</h1>
   <div class="header-actions">
-    <button type="button" class="secondary" (click)="exportExcel()">Export Excel</button>
+    <button type="button" class="secondary" [disabled]="isExportingExcel()" (click)="exportExcel()">
+      {{ isExportingExcel() ? 'Exporting…' : 'Export Excel' }}
+    </button>
     <button type="button" class="secondary" (click)="togglePdfPanel()">
       {{ showPdfPanel() ? 'Close' : 'Export Attendance PDF' }}
     </button>

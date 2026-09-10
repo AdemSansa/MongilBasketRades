@@ -7,6 +7,7 @@ import { Group } from '../../../core/models/group.model';
 import { Player } from '../../../core/models/player.model';
 import { CoachesService } from '../../../core/services/coaches.service';
 import { GroupsService } from '../../../core/services/groups.service';
+import { PaymentsService } from '../../../core/services/payments.service';
 import { PlayersService } from '../../../core/services/players.service';
 import { ReportsService } from '../../../core/services/reports.service';
 import { exportMonthlyAttendancePdf, exportPlayersToExcel } from '../../../core/utils/export.util';
@@ -40,6 +41,7 @@ export class PlayersList {
   private readonly groupsService = inject(GroupsService);
   private readonly coachesService = inject(CoachesService);
   private readonly reportsService = inject(ReportsService);
+  private readonly paymentsService = inject(PaymentsService);
 
   readonly statusFilters = STATUS_FILTERS;
   readonly genderFilters = GENDER_FILTERS;
@@ -69,6 +71,8 @@ export class PlayersList {
     emergencyContactName: [''],
     emergencyContactPhone: [''],
   });
+
+  readonly isExportingExcel = signal(false);
 
   readonly showPdfPanel = signal(false);
   readonly isExportingPdf = signal(false);
@@ -146,8 +150,25 @@ export class PlayersList {
     }
   }
 
-  exportExcel(): void {
-    exportPlayersToExcel(this.players(), (groupId) => this.groupName(groupId));
+  async exportExcel(): Promise<void> {
+    this.isExportingExcel.set(true);
+    this.errorMessage.set(null);
+    try {
+      const now = new Date();
+      const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const payments = await this.paymentsService.list(null, currentPeriod);
+      const statusByPlayerId = new Map(payments.map((p) => [p.playerId, p.status]));
+
+      exportPlayersToExcel(
+        this.players(),
+        (groupId) => this.groupName(groupId),
+        (playerId) => statusByPlayerId.get(playerId) ?? 'No Record',
+      );
+    } catch (error) {
+      this.errorMessage.set(extractErrorMessage(error));
+    } finally {
+      this.isExportingExcel.set(false);
+    }
   }
 
   startEdit(player: Player): void {
