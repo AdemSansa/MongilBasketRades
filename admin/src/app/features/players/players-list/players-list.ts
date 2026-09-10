@@ -2,15 +2,30 @@ import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { Coach } from '../../../core/models/coach.model';
 import { Group } from '../../../core/models/group.model';
 import { Player } from '../../../core/models/player.model';
+import { CoachesService } from '../../../core/services/coaches.service';
 import { GroupsService } from '../../../core/services/groups.service';
 import { PlayersService } from '../../../core/services/players.service';
+import { ReportsService } from '../../../core/services/reports.service';
+import { exportMonthlyAttendancePdf, exportPlayersToExcel } from '../../../core/utils/export.util';
 
 const STATUS_FILTERS: { value: string | null; label: string }[] = [
   { value: 'ACTIVE', label: 'Active' },
   { value: 'ARCHIVED', label: 'Archived' },
   { value: null, label: 'All' },
+];
+
+const GENDER_FILTERS: { value: string | null; label: string }[] = [
+  { value: null, label: 'Any gender' },
+  { value: 'MALE', label: 'Male' },
+  { value: 'FEMALE', label: 'Female' },
+];
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
 @Component({
@@ -23,13 +38,21 @@ export class PlayersList {
   private readonly fb = inject(FormBuilder);
   private readonly playersService = inject(PlayersService);
   private readonly groupsService = inject(GroupsService);
+  private readonly coachesService = inject(CoachesService);
+  private readonly reportsService = inject(ReportsService);
 
   readonly statusFilters = STATUS_FILTERS;
+  readonly genderFilters = GENDER_FILTERS;
+  readonly months = MONTHS;
+
   readonly activeFilter = signal<string | null>('ACTIVE');
+  readonly genderFilter = signal<string | null>(null);
+  readonly coachFilter = signal<string | null>(null);
   readonly searchTerm = signal('');
 
   readonly players = signal<Player[]>([]);
   readonly groups = signal<Group[]>([]);
+  readonly coaches = signal<Coach[]>([]);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
 
@@ -47,16 +70,26 @@ export class PlayersList {
     emergencyContactPhone: [''],
   });
 
+  readonly showPdfPanel = signal(false);
+  readonly isExportingPdf = signal(false);
+  readonly pdfError = signal<string | null>(null);
+  readonly pdfCoachId = signal<string>('');
+  readonly pdfYear = signal<number>(new Date().getFullYear());
+  readonly pdfMonth = signal<number>(new Date().getMonth() + 1);
+
   constructor() {
     this.load();
-    this.loadGroups();
+    this.loadLookups();
   }
 
-  private async loadGroups(): Promise<void> {
+  private async loadLookups(): Promise<void> {
     try {
-      this.groups.set(await this.groupsService.list());
+      const [groups, coaches] = await Promise.all([this.groupsService.list(), this.coachesService.list()]);
+      this.groups.set(groups);
+      this.coaches.set(coaches);
     } catch {
-      // Group names are a display nicety here; a failure just falls back to showing raw ids.
+      // Group/coach names are a display nicety here; a failure just falls back to raw ids
+      // for the table, and the PDF/coach filter dropdowns simply stay empty.
     }
   }
 
@@ -80,6 +113,16 @@ export class PlayersList {
     this.load();
   }
 
+  setGenderFilter(gender: string | null): void {
+    this.genderFilter.set(gender);
+    this.load();
+  }
+
+  setCoachFilter(coachId: string): void {
+    this.coachFilter.set(coachId || null);
+    this.load();
+  }
+
   async search(): Promise<void> {
     await this.load();
   }
@@ -88,12 +131,23 @@ export class PlayersList {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      this.players.set(await this.playersService.list(this.searchTerm().trim() || undefined, this.activeFilter()));
+      this.players.set(
+        await this.playersService.list({
+          search: this.searchTerm().trim() || undefined,
+          status: this.activeFilter(),
+          gender: this.genderFilter(),
+          coachId: this.coachFilter(),
+        }),
+      );
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  exportExcel(): void {
+    exportPlayersToExcel(this.players(), (groupId) => this.groupName(groupId));
   }
 
   startEdit(player: Player): void {
@@ -158,6 +212,27 @@ export class PlayersList {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {
       this.actionInFlightId.set(null);
+    }
+  }
+
+  togglePdfPanel(): void {
+    this.showPdfPanel.update((v) => !v);
+    this.pdfError.set(null);
+  }
+
+  async exportPdf(): Promise<void> {
+    this.isExportingPdf.set(true);
+    this.pdfError.set(null);
+    try {
+      const coachId = this.pdfCoachId() || null;
+      const report = await this.reportsService.monthlyAttendance(this.pdfYear(), this.pdfMonth(), coachId);
+      const coach = coachId ? this.coaches().find((c) => c.id === coachId) : null;
+      const coachLabel = coach ? `${coach.firstName} ${coach.lastName}` : 'All Coaches';
+      exportMonthlyAttendancePdf(report, coachLabel);
+    } catch (error) {
+      this.pdfError.set(extractErrorMessage(error));
+    } finally {
+      this.isExportingPdf.set(false);
     }
   }
 }

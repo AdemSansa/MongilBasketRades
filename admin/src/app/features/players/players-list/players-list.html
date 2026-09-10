@@ -1,4 +1,50 @@
-<h1>Players</h1>
+<div class="header-row">
+  <h1>Players</h1>
+  <div class="header-actions">
+    <button type="button" class="secondary" (click)="exportExcel()">Export Excel</button>
+    <button type="button" class="secondary" (click)="togglePdfPanel()">
+      {{ showPdfPanel() ? 'Close' : 'Export Attendance PDF' }}
+    </button>
+  </div>
+</div>
+
+@if (showPdfPanel()) {
+  <div class="pdf-panel">
+    <h2>Monthly Attendance Report</h2>
+    <div class="pdf-controls">
+      <label>
+        Coach
+        <select [ngModel]="pdfCoachId()" (ngModelChange)="pdfCoachId.set($event)">
+          <option value="">All Coaches</option>
+          @for (coach of coaches(); track coach.id) {
+            <option [value]="coach.id">{{ coach.firstName }} {{ coach.lastName }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Month
+        <select [ngModel]="pdfMonth()" (ngModelChange)="pdfMonth.set($event)">
+          @for (month of months; track month; let i = $index) {
+            <option [value]="i + 1">{{ month }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Year
+        <input type="number" [ngModel]="pdfYear()" (ngModelChange)="pdfYear.set($event)" />
+      </label>
+
+      <button type="button" class="primary" [disabled]="isExportingPdf()" (click)="exportPdf()">
+        {{ isExportingPdf() ? 'Generating…' : 'Download PDF' }}
+      </button>
+    </div>
+    @if (pdfError()) {
+      <p class="pdf-error">{{ pdfError() }}</p>
+    }
+  </div>
+}
 
 <div class="toolbar">
   <input
@@ -9,6 +55,19 @@
     (keyup.enter)="search()"
   />
   <button type="button" class="primary" (click)="search()">Search</button>
+
+  <select [ngModel]="genderFilter()" (ngModelChange)="setGenderFilter($event)">
+    @for (filter of genderFilters; track filter.label) {
+      <option [ngValue]="filter.value">{{ filter.label }}</option>
+    }
+  </select>
+
+  <select [ngModel]="coachFilter() ?? ''" (ngModelChange)="setCoachFilter($event)">
+    <option value="">Any coach</option>
+    @for (coach of coaches(); track coach.id) {
+      <option [value]="coach.id">{{ coach.firstName }} {{ coach.lastName }}</option>
+    }
+  </select>
 </div>
 
 <div class="filters">
@@ -42,6 +101,7 @@
         <tr>
           <th>Name</th>
           <th>Age</th>
+          <th>Gender</th>
           <th>Group</th>
           <th>Status</th>
           <th>Registered</th>
@@ -53,6 +113,7 @@
           <tr>
             <td>{{ player.firstName }} {{ player.lastName }}</td>
             <td>{{ age(player.dateOfBirth) }}</td>
+            <td>{{ player.gender || '—' }}</td>
             <td>{{ groupName(player.currentGroupId) }}</td>
             <td><span class="status-badge" [attr.data-status]="player.status">{{ player.status }}</span></td>
             <td>{{ player.registrationDate | date: 'mediumDate' }}</td>
