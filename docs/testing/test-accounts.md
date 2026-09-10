@@ -1,47 +1,47 @@
-# Test Accounts (dev environment only)
+# Test Accounts
 
-Credentials for manually testing each role against the local dev backend
-(`http://192.168.100.2:8080`, Docker Postgres). None of these are real
-academy credentials — see notes per account.
+## Live deployment (Render + Neon)
 
-**This IP changes** whenever the dev machine's Wi-Fi gets a new DHCP
-lease (e.g. after sleep/reconnect — this happened once already, on
-2026-09-10). If the Flutter app or Angular app suddenly can't reach the
-backend, check the machine's current IP (`ipconfig` / PowerShell
-`Get-NetIPAddress -AddressFamily IPv4`) before assuming a real bug, and
-update it in both `mobile/lib/core/constants/api_constants.dart`
-(`baseUrl`) and `admin/src/app/core/config/api-config.ts`
-(`API_BASE_URL`) if it's changed.
+Backend: **https://mongilbasketrades.onrender.com/api**
+Free tier — first request after ~15 min idle takes 30-60s to wake up.
 
-## Admin (Angular app)
+| Role | Email | Password | Notes |
+|---|---|---|---|
+| Admin | `admin@mongilbasket.test` | `AdminLive2026!` | Created directly via SQL against Neon (bootstrap — no other way to create the first admin). |
+| Coach | `mme.amira@mongilbasket.academy` | `ImportPending2026!` | Grandes Filles - Mme Amira |
+| Coach | `mlle.amira@mongilbasket.academy` | `ImportPending2026!` | Grandes Filles - Mlle Amira |
+| Coach | `fathi@mongilbasket.academy` | `ImportPending2026!` | Garcons - Coach Fathi |
+| Coach | `ines@mongilbasket.academy` | `ImportPending2026!` | Groupe - Coach Ines |
+| Coach | `hejer@mongilbasket.academy` | `ImportPending2026!` | Groupe - Coach Hejer |
+| Parent | `testparent@mongilbasket.test` | `TestParent2026!` | No children yet on this live DB — it's a fresh Neon database, not a copy of local dev data. |
 
-| Email | Password | Notes |
-|---|---|---|
-| `admin@mongilbasket.test` | `AdminTest2026!` | Pre-existing seed account; password was unknown/lost and reset to this value on 2026-09-08 during testing. Reset again if needed — it's a throwaway dev account, not a real person. |
+**Note:** the live database is currently empty of the local dev roster
+(245 imported players, seasons, groups, sessions, attendance, payments)
+— only the accounts above exist. Decide deliberately whether to import
+the real roster here too (see `backend/scripts/import_roster.py`,
+pointed at Neon's connection details) or seed it manually through the
+admin app now that Groups/Seasons can be created via the UI.
 
-Use this to log into the Angular admin app (`admin/`, `npm run start`, http://localhost:4200) — Registrations, Sessions, Players/Groups placeholders.
+## Local dev (Docker Postgres)
 
-## Coaches (Flutter app)
+Credentials for the local dev backend (`http://192.168.100.2:8080` —
+this IP changes whenever the dev machine's Wi-Fi gets a new DHCP lease;
+check `ipconfig` / `Get-NetIPAddress -AddressFamily IPv4` if it stops
+responding, don't assume a real bug). This environment has the full
+245-player real roster import, seasons/groups, and this session's test
+data (sessions, attendance marks, payments).
 
-Real imported coach accounts — real names, but the password is a shared placeholder set during the roster import (see `backend/scripts/import_roster.py`), not each coach's real password.
+| Role | Email | Password | Notes |
+|---|---|---|---|
+| Admin | `admin@mongilbasket.test` | `AdminTest2026!` | Pre-existing seed account; password was unknown/lost and reset on 2026-09-08. |
+| Coach | `mme.amira@mongilbasket.academy` | `ImportPending2026!` | Grandes Filles - Mme Amira (75 players) |
+| Coach | `mlle.amira@mongilbasket.academy` | `ImportPending2026!` | Grandes Filles - Mlle Amira (38 players) |
+| Coach | `fathi@mongilbasket.academy` | `ImportPending2026!` | Garcons - Coach Fathi (34 players) |
+| Coach | `ines@mongilbasket.academy` | `ImportPending2026!` | Groupe - Coach Ines (47 players) |
+| Coach | `hejer@mongilbasket.academy` | `ImportPending2026!` | Groupe - Coach Hejer (50 players) |
+| Parent | `testparent@mongilbasket.test` | `TestParent2026!` | Has one child, "ahmed test", approved into Garcons - Coach Fathi. |
 
-| Email | Password | Group |
-|---|---|---|
-| `mme.amira@mongilbasket.academy` | `ImportPending2026!` | Grandes Filles - Mme Amira |
-| `mlle.amira@mongilbasket.academy` | `ImportPending2026!` | Grandes Filles - Mlle Amira |
-| `fathi@mongilbasket.academy` | `ImportPending2026!` | Garcons - Coach Fathi |
-| `ines@mongilbasket.academy` | `ImportPending2026!` | Groupe - Coach Ines |
-| `hejer@mongilbasket.academy` | `ImportPending2026!` | Groupe - Coach Hejer |
-
-## Parents (Flutter app)
-
-The 241 imported real parent accounts are synthetic (no real email/password captured in the source spreadsheet) — **they cannot log in**. Use this test account instead:
-
-| Email | Password | Notes |
-|---|---|---|
-| `testparent@mongilbasket.test` | `TestParent2026!` | Created 2026-09-08 via `POST /api/users` (admin-created, per the parent-account-creation fix that day). Has one child, "ahmed test", approved into Garcons - Coach Fathi. |
-
-To create another test parent (as admin, via curl or the Angular app once a Players/Users screen exists):
+To create another test parent (as admin, via curl):
 
 ```bash
 curl -X POST http://192.168.100.2:8080/api/users \
@@ -50,6 +50,7 @@ curl -X POST http://192.168.100.2:8080/api/users \
   -d '{"email":"someone@example.com","password":"SomePassword123!","firstName":"First","lastName":"Last","phone":"12345678","role":"PARENT"}'
 ```
 
-## Backend
-
-Requires `JWT_SECRET` to be set before `./mvnw spring-boot:run` — see `backend/README.md`. A restart regenerates the secret unless it's exported persistently, which invalidates existing tokens (not accounts/passwords — those are unaffected).
+Requires `JWT_SECRET` to be set before `./mvnw spring-boot:run` — see
+`backend/README.md`. A restart regenerates the secret unless it's
+exported persistently, which invalidates existing local-dev sessions
+(not accounts/passwords — those are unaffected).
