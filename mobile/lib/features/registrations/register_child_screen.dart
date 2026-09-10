@@ -96,10 +96,9 @@ class _RegisterChildScreenState extends ConsumerState<RegisterChildScreen> {
                 child: ListTile(
                   title: Text(group.name),
                   subtitle: Text(
-                    '${group.scheduleLabel}\nAges ${group.ageMin}-${group.ageMax} · ${group.currentCount}/${group.capacity} spots'
+                    'Ages ${group.ageMin}-${group.ageMax} · ${group.currentCount}/${group.capacity} spots'
                     '${group.coachName != null ? ' · Coach ${group.coachName}' : ''}',
                   ),
-                  isThreeLine: true,
                   trailing: isSubmitting
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : FilledButton(

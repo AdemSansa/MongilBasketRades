@@ -29,4 +29,7 @@ public interface TrainingSessionRepository
 
     Optional<TrainingSession> findFirstByGroupIdAndDateGreaterThanEqualAndStatusOrderByDateAscStartTimeAsc(
             UUID groupId, LocalDate date, SessionStatus status);
+
+    List<TrainingSession> findByGroupIdAndDateBetweenOrderByDateAscStartTimeAsc(
+            UUID groupId, LocalDate startDate, LocalDate endDate);
 }

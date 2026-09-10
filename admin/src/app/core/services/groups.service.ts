@@ -13,9 +13,6 @@ export interface GroupWriteRequest {
   ageMax: number;
   capacity: number;
   coachId?: string;
-  scheduleDay: 'SATURDAY' | 'SUNDAY';
-  scheduleStartTime: string;
-  scheduleEndTime: string;
 }
 
 @Injectable({ providedIn: 'root' })

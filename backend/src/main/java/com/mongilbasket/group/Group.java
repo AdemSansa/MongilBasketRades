@@ -1,6 +1,5 @@
 package com.mongilbasket.group;
 
-import java.time.LocalTime;
 import java.util.UUID;
 
 import com.mongilbasket.coach.Coach;
@@ -55,16 +54,6 @@ public class Group {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coach_id")
     private Coach coach;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ScheduleDay scheduleDay;
-
-    @Column(nullable = false)
-    private LocalTime scheduleStartTime;
-
-    @Column(nullable = false)
-    private LocalTime scheduleEndTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

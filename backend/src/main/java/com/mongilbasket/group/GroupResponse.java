@@ -1,6 +1,5 @@
 package com.mongilbasket.group;
 
-import java.time.LocalTime;
 import java.util.UUID;
 
 import com.mongilbasket.coach.Coach;
@@ -15,9 +14,6 @@ public record GroupResponse(
         long currentCount,
         UUID coachId,
         String coachName,
-        String scheduleDay,
-        LocalTime scheduleStartTime,
-        LocalTime scheduleEndTime,
         String status) {
 
     public static GroupResponse from(Group group, long currentCount) {
@@ -32,9 +28,6 @@ public record GroupResponse(
                 currentCount,
                 coach != null ? coach.getId() : null,
                 coach != null ? coach.getUser().getFirstName() + " " + coach.getUser().getLastName() : null,
-                group.getScheduleDay().name(),
-                group.getScheduleStartTime(),
-                group.getScheduleEndTime(),
                 group.getStatus().name());
     }
 }

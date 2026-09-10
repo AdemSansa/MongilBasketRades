@@ -12,6 +12,8 @@ public interface AttendanceRepository extends JpaRepository<Attendance, UUID> {
 
     List<Attendance> findBySessionId(UUID sessionId);
 
+    List<Attendance> findBySessionIdIn(List<UUID> sessionIds);
+
     long countByStatus(AttendanceStatus status);
 
     Optional<Attendance> findBySessionIdAndPlayerId(UUID sessionId, UUID playerId);

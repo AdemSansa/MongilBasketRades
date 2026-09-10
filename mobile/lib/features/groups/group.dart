@@ -7,9 +7,6 @@ class Group {
     required this.ageMax,
     required this.capacity,
     required this.currentCount,
-    required this.scheduleDay,
-    required this.scheduleStartTime,
-    required this.scheduleEndTime,
     required this.status,
     this.coachName,
   });
@@ -23,9 +20,6 @@ class Group {
         capacity: json['capacity'] as int,
         currentCount: json['currentCount'] as int,
         coachName: json['coachName'] as String?,
-        scheduleDay: json['scheduleDay'] as String,
-        scheduleStartTime: json['scheduleStartTime'] as String,
-        scheduleEndTime: json['scheduleEndTime'] as String,
         status: json['status'] as String,
       );
 
@@ -37,15 +31,7 @@ class Group {
   final int capacity;
   final int currentCount;
   final String? coachName;
-  final String scheduleDay;
-  final String scheduleStartTime;
-  final String scheduleEndTime;
   final String status;
 
   bool get isFull => currentCount >= capacity;
-
-  String get scheduleLabel {
-    final day = scheduleDay == 'SATURDAY' ? 'Saturday' : 'Sunday';
-    return '$day ${scheduleStartTime.substring(0, 5)}–${scheduleEndTime.substring(0, 5)}';
-  }
 }

@@ -8,8 +8,5 @@ export interface Group {
   currentCount: number;
   coachId: string | null;
   coachName: string | null;
-  scheduleDay: 'SATURDAY' | 'SUNDAY';
-  scheduleStartTime: string;
-  scheduleEndTime: string;
   status: 'ACTIVE' | 'INACTIVE';
 }

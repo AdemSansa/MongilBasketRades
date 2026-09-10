@@ -2,8 +2,11 @@ package com.mongilbasket.player;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +33,20 @@ public class PlayerService {
      * exist until Phase 5, so every coach currently sees every player.
      */
     @Transactional(readOnly = true)
-    public List<PlayerResponse> list(String search, PlayerStatus status) {
-        return playerRepository.search(status, search).stream().map(PlayerResponse::from).toList();
+    public List<PlayerResponse> list(
+            String search, PlayerStatus status, Gender gender, UUID groupId, UUID coachId) {
+        List<Specification<Player>> filters = Stream.of(
+                        PlayerSpecifications.nameContains(search),
+                        PlayerSpecifications.statusEquals(status),
+                        PlayerSpecifications.genderEquals(gender),
+                        PlayerSpecifications.currentGroupIdEquals(groupId),
+                        PlayerSpecifications.coachIdEquals(coachId))
+                .filter(Objects::nonNull)
+                .toList();
+
+        return playerRepository.findAll(Specification.allOf(filters)).stream()
+                .map(PlayerResponse::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)

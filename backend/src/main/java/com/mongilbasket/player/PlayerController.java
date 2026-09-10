@@ -39,8 +39,11 @@ public class PlayerController {
     @PreAuthorize("hasAnyRole('ADMIN','COACH')")
     public ApiResponse<List<PlayerResponse>> list(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) PlayerStatus status) {
-        return ApiResponse.ok(playerService.list(search, status));
+            @RequestParam(required = false) PlayerStatus status,
+            @RequestParam(required = false) Gender gender,
+            @RequestParam(required = false) UUID groupId,
+            @RequestParam(required = false) UUID coachId) {
+        return ApiResponse.ok(playerService.list(search, status, gender, groupId, coachId));
     }
 
     @GetMapping("/{id}")

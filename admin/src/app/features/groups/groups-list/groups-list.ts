@@ -8,8 +8,6 @@ import { CoachesService } from '../../../core/services/coaches.service';
 import { GroupWriteRequest, GroupsService } from '../../../core/services/groups.service';
 import { SeasonsService } from '../../../core/services/seasons.service';
 
-const SCHEDULE_DAYS: ('SATURDAY' | 'SUNDAY')[] = ['SATURDAY', 'SUNDAY'];
-
 @Component({
   imports: [ReactiveFormsModule],
   selector: 'app-groups-list',
@@ -21,8 +19,6 @@ export class GroupsList {
   private readonly groupsService = inject(GroupsService);
   private readonly seasonsService = inject(SeasonsService);
   private readonly coachesService = inject(CoachesService);
-
-  readonly scheduleDays = SCHEDULE_DAYS;
 
   readonly groups = signal<Group[]>([]);
   readonly seasons = signal<Season[]>([]);
@@ -42,9 +38,6 @@ export class GroupsList {
     ageMax: [14, [Validators.required, Validators.min(0)]],
     capacity: [20, [Validators.required, Validators.min(1)]],
     coachId: [''],
-    scheduleDay: ['SATURDAY' as 'SATURDAY' | 'SUNDAY', Validators.required],
-    scheduleStartTime: ['09:00', Validators.required],
-    scheduleEndTime: ['10:30', Validators.required],
   });
 
   readonly editForm = this.fb.nonNullable.group({
@@ -54,9 +47,6 @@ export class GroupsList {
     ageMax: [14, [Validators.required, Validators.min(0)]],
     capacity: [20, [Validators.required, Validators.min(1)]],
     coachId: [''],
-    scheduleDay: ['SATURDAY' as 'SATURDAY' | 'SUNDAY', Validators.required],
-    scheduleStartTime: ['09:00', Validators.required],
-    scheduleEndTime: ['10:30', Validators.required],
   });
 
   constructor() {
@@ -100,14 +90,7 @@ export class GroupsList {
     this.errorMessage.set(null);
     try {
       await this.groupsService.create(this.toRequest(this.form.getRawValue()));
-      this.form.reset({
-        ageMin: 5,
-        ageMax: 14,
-        capacity: 20,
-        scheduleDay: 'SATURDAY',
-        scheduleStartTime: '09:00',
-        scheduleEndTime: '10:30',
-      });
+      this.form.reset({ ageMin: 5, ageMax: 14, capacity: 20 });
       this.showForm.set(false);
       await this.load();
     } catch (error) {
@@ -126,9 +109,6 @@ export class GroupsList {
       ageMax: group.ageMax,
       capacity: group.capacity,
       coachId: group.coachId ?? '',
-      scheduleDay: group.scheduleDay,
-      scheduleStartTime: group.scheduleStartTime.substring(0, 5),
-      scheduleEndTime: group.scheduleEndTime.substring(0, 5),
     });
   }
 
@@ -173,9 +153,6 @@ export class GroupsList {
     ageMax: number;
     capacity: number;
     coachId: string;
-    scheduleDay: 'SATURDAY' | 'SUNDAY';
-    scheduleStartTime: string;
-    scheduleEndTime: string;
   }): GroupWriteRequest {
     return {
       name: raw.name,
@@ -184,9 +161,6 @@ export class GroupsList {
       ageMax: raw.ageMax,
       capacity: raw.capacity,
       coachId: raw.coachId || undefined,
-      scheduleDay: raw.scheduleDay,
-      scheduleStartTime: `${raw.scheduleStartTime}:00`,
-      scheduleEndTime: `${raw.scheduleEndTime}:00`,
     };
   }
 }

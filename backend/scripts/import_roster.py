@@ -74,45 +74,30 @@ COACH_DEFS = {
         first="Amira",
         last="(Mme)",
         group_name="Grandes Filles - Mme Amira",
-        day="SATURDAY",
-        start="13:30",
-        end="15:00",
     ),
     "Mlle Amira": dict(
         email="mlle.amira@mongilbasket.academy",
         first="Amira",
         last="(Mlle)",
         group_name="Grandes Filles - Mlle Amira",
-        day="SUNDAY",
-        start="09:00",
-        end="10:30",
     ),
     "Coach Fathi": dict(
         email="fathi@mongilbasket.academy",
         first="Fathi",
         last="Coach",
         group_name="Garcons - Coach Fathi",
-        day="SATURDAY",
-        start="09:00",
-        end="10:30",
     ),
     "Coach Ines": dict(
         email="ines@mongilbasket.academy",
         first="Ines",
         last="Coach",
         group_name="Groupe - Coach Ines",
-        day="SUNDAY",
-        start="13:00",
-        end="14:30",
     ),
     "Coach Hejer": dict(
         email="hejer@mongilbasket.academy",
         first="Hejer",
         last="Coach",
         group_name="Groupe - Coach Hejer",
-        day="SATURDAY",
-        start="15:00",
-        end="16:30",
     ),
 }
 
@@ -202,9 +187,9 @@ def main():
             roster_count = sum(1 for r in rows if r["coach"] == label)
             capacity = max(roster_count + 15, 20)
             cur.execute(
-                """INSERT INTO groups (id, name, season_id, age_min, age_max, capacity, coach_id, schedule_day, schedule_start_time, schedule_end_time, status)
-                   VALUES (%s, %s, %s, 5, 14, %s, %s, %s, %s, %s, 'ACTIVE')""",
-                (group_id, spec["group_name"], SEASON_ID, capacity, coach_id, spec["day"], spec["start"], spec["end"]),
+                """INSERT INTO groups (id, name, season_id, age_min, age_max, capacity, coach_id, status)
+                   VALUES (%s, %s, %s, 5, 14, %s, %s, 'ACTIVE')""",
+                (group_id, spec["group_name"], SEASON_ID, capacity, coach_id),
             )
         coach_group_ids[label] = group_id
 

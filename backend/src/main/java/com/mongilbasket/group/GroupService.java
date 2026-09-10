@@ -50,9 +50,6 @@ public class GroupService {
                 .ageMax(request.ageMax())
                 .capacity(request.capacity())
                 .coach(coach)
-                .scheduleDay(request.scheduleDay())
-                .scheduleStartTime(request.scheduleStartTime())
-                .scheduleEndTime(request.scheduleEndTime())
                 .build();
         groupRepository.save(group);
         return GroupResponse.from(group, 0);
@@ -70,9 +67,6 @@ public class GroupService {
         group.setAgeMax(request.ageMax());
         group.setCapacity(request.capacity());
         group.setCoach(coach);
-        group.setScheduleDay(request.scheduleDay());
-        group.setScheduleStartTime(request.scheduleStartTime());
-        group.setScheduleEndTime(request.scheduleEndTime());
 
         return GroupResponse.from(group, currentCount(id));
     }

@@ -47,25 +47,6 @@
       </select>
     </label>
 
-    <label>
-      Day
-      <select formControlName="scheduleDay">
-        @for (day of scheduleDays; track day) {
-          <option [value]="day">{{ day }}</option>
-        }
-      </select>
-    </label>
-
-    <label>
-      Start time
-      <input type="time" formControlName="scheduleStartTime" />
-    </label>
-
-    <label>
-      End time
-      <input type="time" formControlName="scheduleEndTime" />
-    </label>
-
     <button type="submit" class="primary" [disabled]="isSubmitting()">
       {{ isSubmitting() ? 'Creating…' : 'Create group' }}
     </button>
@@ -92,7 +73,6 @@
           <th>Ages</th>
           <th>Players</th>
           <th>Coach</th>
-          <th>Schedule</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -101,7 +81,7 @@
         @for (group of groups(); track group.id) {
           <tr>
             @if (editingId() === group.id) {
-              <td colspan="7">
+              <td colspan="6">
                 <form class="edit-inline" [formGroup]="editForm" (ngSubmit)="confirmEdit(group)">
                   <input type="text" placeholder="Name" formControlName="name" />
                   <select formControlName="seasonId">
@@ -118,13 +98,6 @@
                       <option [value]="coach.id">{{ coach.firstName }} {{ coach.lastName }}</option>
                     }
                   </select>
-                  <select formControlName="scheduleDay">
-                    @for (day of scheduleDays; track day) {
-                      <option [value]="day">{{ day }}</option>
-                    }
-                  </select>
-                  <input type="time" formControlName="scheduleStartTime" />
-                  <input type="time" formControlName="scheduleEndTime" />
                   <button type="submit" class="primary" [disabled]="actionInFlightId() === group.id">
                     Save
                   </button>
@@ -136,7 +109,6 @@
               <td>{{ group.ageMin }}–{{ group.ageMax }}</td>
               <td>{{ group.currentCount }} / {{ group.capacity }}</td>
               <td>{{ group.coachName || '—' }}</td>
-              <td>{{ group.scheduleDay }} {{ group.scheduleStartTime.substring(0, 5) }}–{{ group.scheduleEndTime.substring(0, 5) }}</td>
               <td><span class="status-badge" [attr.data-status]="group.status">{{ group.status }}</span></td>
               <td>
                 <button type="button" class="primary" (click)="startEdit(group)">Edit</button>
