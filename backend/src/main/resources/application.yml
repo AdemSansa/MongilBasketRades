@@ -13,7 +13,12 @@ spring:
     password: ${DB_PASSWORD:mongil_basket_dev}
 
 server:
-  port: 8080
+  # Render (and most PaaS hosts) inject PORT and route traffic to whatever
+  # the container actually binds to -- a hardcoded 8080 here would leave
+  # Render's proxy connecting fine but getting no response, since the app
+  # would be listening on the wrong port. Falls back to 8080 for local dev
+  # and the Docker Compose path, where nothing sets PORT.
+  port: ${PORT:8080}
 
 app:
   jwt:
