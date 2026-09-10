@@ -24,7 +24,7 @@ admin app now that Groups/Seasons can be created via the UI.
 
 ## Local dev (Docker Postgres)
 
-Credentials for the local dev backend (`http://192.168.100.2:8080` —
+Credentials for the local dev backend (`http://172.20.10.2:8080` —
 this IP changes whenever the dev machine's Wi-Fi gets a new DHCP lease;
 check `ipconfig` / `Get-NetIPAddress -AddressFamily IPv4` if it stops
 responding, don't assume a real bug). This environment has the full
@@ -44,7 +44,7 @@ data (sessions, attendance marks, payments).
 To create another test parent (as admin, via curl):
 
 ```bash
-curl -X POST http://192.168.100.2:8080/api/users \
+curl -X POST http://172.20.10.2:8080/api/users \
   -H "Authorization: Bearer <admin access token>" \
   -H "Content-Type: application/json" \
   -d '{"email":"someone@example.com","password":"SomePassword123!","firstName":"First","lastName":"Last","phone":"12345678","role":"PARENT"}'

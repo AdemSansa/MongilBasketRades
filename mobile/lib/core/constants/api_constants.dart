@@ -1,11 +1,12 @@
 class ApiConstants {
   ApiConstants._();
 
-  // Dev machine's LAN IP — the physical test device (M2101K7BNY) reaches
-  // the backend over Wi-Fi this way. Swap for 10.0.2.2 (the Android
-  // emulator's host alias) if testing on an emulator instead, or for a
-  // real deployed URL once the backend is hosted somewhere.
-  static const String baseUrl = 'http://192.168.100.2:8080/api';
+  // Dev machine's LAN IP for local testing — check `ipconfig` /
+  // Get-NetIPAddress if this stops responding, it changes whenever the
+  // network changes (Wi-Fi vs hotspot, DHCP lease renewal, etc).
+  // Swap to 'https://mongilbasketrades.onrender.com/api' to test against
+  // the live Render deployment instead (see docs/deployment/DEPLOY.md).
+  static const String baseUrl = 'http://172.20.10.2:8080/api';
 
   static const String login = '/auth/login';
   static const String refresh = '/auth/refresh';
