@@ -117,6 +117,12 @@ No self-service registration endpoint in MVP — admin/coach accounts are seeded
 | GET | `/dashboard/coach` | COACH | own groups, today's/upcoming sessions (§16) |
 | GET | `/dashboard/parent` | PARENT | children summary: next training, attendance %, payment status (§17) |
 
+## Reports
+
+| Method | Path | Role | Notes |
+|---|---|---|---|
+| GET | `/reports/monthly-attendance` | ADMIN | `?coachId=&year=&month=` (coachId optional — omit for every active group). Per-group grid: each session that month, each active player's mark, present/total rate. Backs the Angular Players screen's PDF export — built ahead of the original Version 2 timeline per a direct admin-workflow request (2026-09-10), not part of the Phase 1 plan. |
+
 ## Deferred to Version 2 (not built in MVP)
 
-`/announcements`, `/notifications`, `/reports/*`, `/import`, `/export`, `/players/{id}/qr`.
+`/announcements`, `/notifications`, `/import`, `/export`, `/players/{id}/qr`. (`/reports/*` was deferred here originally but `monthly-attendance` shipped early — see above.)
