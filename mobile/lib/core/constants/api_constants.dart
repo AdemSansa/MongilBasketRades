@@ -1,12 +1,11 @@
 class ApiConstants {
   ApiConstants._();
 
-  // Dev machine's LAN IP for local testing — check `ipconfig` /
-  // Get-NetIPAddress if this stops responding, it changes whenever the
-  // network changes (Wi-Fi vs hotspot, DHCP lease renewal, etc).
-  // Swap to 'https://mongilbasketrades.onrender.com/api' to test against
-  // the live Render deployment instead (see docs/deployment/DEPLOY.md).
-  static const String baseUrl = 'http://172.20.10.2:8080/api';
+  // Live backend on Render (see docs/deployment/DEPLOY.md). Free tier —
+  // the first request after ~15 min idle takes 30-60s to wake up.
+  // For local dev instead, swap to 'http://<dev-machine-LAN-IP>:8080/api'
+  // (check `ipconfig` / Get-NetIPAddress — it changes with the network).
+  static const String baseUrl = 'https://mongilbasketrades.onrender.com/api';
 
   static const String login = '/auth/login';
   static const String refresh = '/auth/refresh';
