@@ -10,8 +10,13 @@ Dio buildDioClient(TokenStorage tokenStorage) {
   final dio = Dio(
     BaseOptions(
       baseUrl: ApiConstants.baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      // Render's free tier spins the backend down after ~15 min idle;
+      // the first request after that wakes it up and can take 30-60s
+      // before it responds at all. 10s (fine for local/always-on dev)
+      // guaranteed a timeout on every cold start against the live
+      // deployment — 60s gives real margin over that documented window.
+      connectTimeout: const Duration(seconds: 60),
+      receiveTimeout: const Duration(seconds: 60),
       contentType: 'application/json',
     ),
   );
