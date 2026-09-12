@@ -13,14 +13,18 @@ Free tier — first request after ~15 min idle takes 30-60s to wake up.
 | Coach | `fathi@mongilbasket.academy` | `ImportPending2026!` | Garcons - Coach Fathi |
 | Coach | `ines@mongilbasket.academy` | `ImportPending2026!` | Groupe - Coach Ines |
 | Coach | `hejer@mongilbasket.academy` | `ImportPending2026!` | Groupe - Coach Hejer |
-| Parent | `testparent@mongilbasket.test` | `TestParent2026!` | No children yet on this live DB — it's a fresh Neon database, not a copy of local dev data. |
+| Parent | `testparent@mongilbasket.test` | `TestParent2026!` | No children yet on this live DB. |
 
-**Note:** the live database is currently empty of the local dev roster
-(245 imported players, seasons, groups, sessions, attendance, payments)
-— only the accounts above exist. Decide deliberately whether to import
-the real roster here too (see `backend/scripts/import_roster.py`,
-pointed at Neon's connection details) or seed it manually through the
-admin app now that Groups/Seasons can be created via the UI.
+**Data seeded on 2026-09-12:** the real 245-player roster was imported
+into Neon too (`backend/scripts/import_roster.py`, pointed at Neon's
+connection details — coach/group creation was idempotent and reused
+the accounts already created via the API, only players/parents were
+newly inserted), under an active "2026-2027" season created via
+`POST /api/seasons` + `.../activate`. Two test sessions (2026-09-12,
+Grandes Filles - Mme Amira and Garcons - Coach Fathi) each have 10
+players marked with a mixed spread of PRESENT/ABSENT/LATE/EXCUSED —
+enough to exercise the attendance UI and PDF/Excel exports live, not a
+full replica of local dev's test data (no payments seeded live yet).
 
 ## Local dev (Docker Postgres)
 
