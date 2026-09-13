@@ -28,14 +28,23 @@ import lombok.RequiredArgsConstructor;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final PaymentStatusReportService paymentStatusReportService;
+
+    @GetMapping("/monthly-status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<MonthlyPaymentStatusResponse> monthlyStatus(
+            @RequestParam int year, @RequestParam int month, @RequestParam(required = false) UUID coachId) {
+        return ApiResponse.ok(paymentStatusReportService.build(year, month, coachId));
+    }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<PaymentResponse>> list(
             @RequestParam(required = false) PaymentStatus status,
             @RequestParam(required = false) String period,
-            @RequestParam(required = false) UUID playerId) {
-        return ApiResponse.ok(paymentService.list(status, period, playerId));
+            @RequestParam(required = false) UUID playerId,
+            @RequestParam(required = false) PaymentType type) {
+        return ApiResponse.ok(paymentService.list(status, period, playerId, type));
     }
 
     @GetMapping("/me")

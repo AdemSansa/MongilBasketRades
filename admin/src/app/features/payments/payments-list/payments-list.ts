@@ -1,11 +1,23 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { Payment, PaymentMethod, PaymentStatus } from '../../../core/models/payment.model';
+import { Coach } from '../../../core/models/coach.model';
+import {
+  MonthlyPaymentStatus,
+  Payment,
+  PaymentMethod,
+  PaymentStatus,
+  PaymentType,
+} from '../../../core/models/payment.model';
 import { Player } from '../../../core/models/player.model';
+import { Season } from '../../../core/models/season.model';
+import { CoachesService } from '../../../core/services/coaches.service';
 import { PaymentsService } from '../../../core/services/payments.service';
 import { PlayersService } from '../../../core/services/players.service';
+import { SeasonsService } from '../../../core/services/seasons.service';
+import { SettingsService } from '../../../core/services/settings.service';
+import { MonthPaymentStatus, derivePlayerPaymentStatus } from '../../../core/utils/payment-status.util';
 
 const STATUS_FILTERS: { value: PaymentStatus | null; label: string }[] = [
   { value: null, label: 'All' },
@@ -17,9 +29,15 @@ const STATUS_FILTERS: { value: PaymentStatus | null; label: string }[] = [
 
 const METHODS: PaymentMethod[] = ['CASH', 'BANK_TRANSFER', 'OTHER'];
 const STATUSES: PaymentStatus[] = ['PAID', 'PARTIAL', 'UNPAID', 'OVERDUE'];
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+type Tab = 'records' | 'monthly-status';
 
 @Component({
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, FormsModule, DatePipe],
   selector: 'app-payments-list',
   styleUrl: './payments-list.scss',
   templateUrl: './payments-list.html',
@@ -28,27 +46,63 @@ export class PaymentsList {
   private readonly fb = inject(FormBuilder);
   private readonly paymentsService = inject(PaymentsService);
   private readonly playersService = inject(PlayersService);
+  private readonly coachesService = inject(CoachesService);
+  private readonly seasonsService = inject(SeasonsService);
+  private readonly settingsService = inject(SettingsService);
 
   readonly statusFilters = STATUS_FILTERS;
   readonly methods = METHODS;
   readonly statuses = STATUSES;
+  readonly monthNames = MONTH_NAMES;
   readonly activeFilter = signal<PaymentStatus | null>(null);
+  readonly activeTab = signal<Tab>('records');
 
   readonly payments = signal<Payment[]>([]);
   readonly players = signal<Player[]>([]);
+  readonly coaches = signal<Coach[]>([]);
+  readonly activeSeason = signal<Season | null>(null);
+  readonly membershipFee = signal(50);
+  readonly insuranceFee = signal(60);
+
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   readonly showForm = signal(false);
   readonly isSubmitting = signal(false);
 
-  /** Payment id currently showing its inline correction form, if any. */
   readonly editingId = signal<string | null>(null);
   readonly actionInFlightId = signal<string | null>(null);
 
+  // Player combobox for the record-payment form.
+  readonly playerQuery = signal('');
+  readonly playerDropdownOpen = signal(false);
+  readonly selectedPlayer = signal<Player | null>(null);
+  readonly selectedPlayerPayments = signal<Payment[]>([]);
+  readonly selectedPlayerStatus = computed(() =>
+    derivePlayerPaymentStatus(this.selectedPlayerPayments(), this.activeSeason()),
+  );
+  readonly filteredPlayers = computed(() => {
+    const query = this.playerQuery().trim().toLowerCase();
+    const all = this.players();
+    const matches = query
+      ? all.filter((p) => `${p.firstName} ${p.lastName}`.toLowerCase().includes(query))
+      : all;
+    return matches.slice(0, 25);
+  });
+
+  // Monthly status tab.
+  readonly statusYear = signal(new Date().getFullYear());
+  readonly statusMonth = signal(new Date().getMonth() + 1);
+  readonly statusCoachId = signal<string>('');
+  readonly monthlyStatus = signal<MonthlyPaymentStatus | null>(null);
+  readonly isLoadingStatus = signal(false);
+  readonly paidRows = computed(() => this.monthlyStatus()?.rows.filter((r) => r.status === 'PAID') ?? []);
+  readonly unpaidRows = computed(() => this.monthlyStatus()?.rows.filter((r) => r.status !== 'PAID') ?? []);
+
   readonly form = this.fb.nonNullable.group({
     playerId: ['', Validators.required],
-    period: ['', [Validators.required, Validators.pattern(/^\d{4}-\d{2}$/)]],
-    amount: [0, [Validators.required, Validators.min(0.01)]],
+    type: ['MEMBERSHIP' as PaymentType, Validators.required],
+    period: ['', [Validators.required]],
+    amount: [50, [Validators.required, Validators.min(0.01)]],
     status: ['UNPAID' as PaymentStatus, Validators.required],
     method: [null as PaymentMethod | null],
     paymentDate: [''],
@@ -67,20 +121,26 @@ export class PaymentsList {
 
   constructor() {
     this.load();
-    this.loadPlayers();
+    this.loadLookups();
   }
 
-  private async loadPlayers(): Promise<void> {
+  private async loadLookups(): Promise<void> {
     try {
-      this.players.set(await this.playersService.list());
+      const [players, coaches, seasons, settings] = await Promise.all([
+        this.playersService.list(),
+        this.coachesService.list(),
+        this.seasonsService.list(),
+        this.settingsService.get(),
+      ]);
+      this.players.set(players);
+      this.coaches.set(coaches);
+      this.activeSeason.set(seasons.find((s) => s.isActive) ?? null);
+      this.membershipFee.set(settings.membershipFeeMonthly);
+      this.insuranceFee.set(settings.insuranceFeeYearly);
+      this.applyTypeDefaults('MEMBERSHIP');
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));
     }
-  }
-
-  setFilter(status: PaymentStatus | null): void {
-    this.activeFilter.set(status);
-    this.load();
   }
 
   async load(): Promise<void> {
@@ -95,6 +155,32 @@ export class PaymentsList {
     }
   }
 
+  setTab(tab: Tab): void {
+    this.activeTab.set(tab);
+    if (tab === 'monthly-status' && !this.monthlyStatus()) {
+      this.loadMonthlyStatus();
+    }
+  }
+
+  async loadMonthlyStatus(): Promise<void> {
+    this.isLoadingStatus.set(true);
+    this.errorMessage.set(null);
+    try {
+      this.monthlyStatus.set(
+        await this.paymentsService.monthlyStatus(this.statusYear(), this.statusMonth(), this.statusCoachId() || null),
+      );
+    } catch (error) {
+      this.errorMessage.set(extractErrorMessage(error));
+    } finally {
+      this.isLoadingStatus.set(false);
+    }
+  }
+
+  setFilter(status: PaymentStatus | null): void {
+    this.activeFilter.set(status);
+    this.load();
+  }
+
   playerName(playerId: string): string {
     const player = this.players().find((p) => p.id === playerId);
     return player ? `${player.firstName} ${player.lastName}` : playerId;
@@ -102,6 +188,65 @@ export class PaymentsList {
 
   toggleForm(): void {
     this.showForm.update((v) => !v);
+  }
+
+  // --- Player combobox ---
+
+  onPlayerQueryInput(value: string): void {
+    this.playerQuery.set(value);
+    this.playerDropdownOpen.set(true);
+    if (this.selectedPlayer() && `${this.selectedPlayer()!.firstName} ${this.selectedPlayer()!.lastName}` !== value) {
+      this.selectedPlayer.set(null);
+      this.selectedPlayerPayments.set([]);
+      this.form.controls.playerId.setValue('');
+    }
+  }
+
+  openPlayerDropdown(): void {
+    this.playerDropdownOpen.set(true);
+  }
+
+  closePlayerDropdownDelayed(): void {
+    setTimeout(() => this.playerDropdownOpen.set(false), 150);
+  }
+
+  async selectPlayer(player: Player): Promise<void> {
+    this.selectedPlayer.set(player);
+    this.playerQuery.set(`${player.firstName} ${player.lastName}`);
+    this.form.controls.playerId.setValue(player.id);
+    this.playerDropdownOpen.set(false);
+
+    try {
+      this.selectedPlayerPayments.set(await this.paymentsService.list(null, null, player.id));
+    } catch (error) {
+      this.errorMessage.set(extractErrorMessage(error));
+    }
+    this.applyTypeDefaults(this.form.controls.type.value);
+  }
+
+  // --- Type-driven defaults ---
+
+  onTypeChange(type: PaymentType): void {
+    this.applyTypeDefaults(type);
+  }
+
+  selectMonth(month: MonthPaymentStatus): void {
+    if (month.status === 'PAID') return;
+    this.form.controls.period.setValue(month.period);
+  }
+
+  private applyTypeDefaults(type: PaymentType): void {
+    if (type === 'MEMBERSHIP') {
+      const months = this.selectedPlayerStatus().months;
+      const firstUnpaid = months.find((m) => m.status !== 'PAID');
+      const now = new Date();
+      const fallback = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      this.form.controls.period.setValue(firstUnpaid?.period ?? fallback);
+      this.form.controls.amount.setValue(this.membershipFee());
+    } else {
+      this.form.controls.period.setValue(this.activeSeason()?.name ?? '');
+      this.form.controls.amount.setValue(this.insuranceFee());
+    }
   }
 
   async submit(): Promise<void> {
@@ -117,6 +262,7 @@ export class PaymentsList {
       await this.paymentsService.create({
         playerId: raw.playerId,
         amount: raw.amount,
+        type: raw.type,
         period: raw.period,
         status: raw.status,
         method: raw.method ?? undefined,
@@ -124,7 +270,11 @@ export class PaymentsList {
         reference: raw.reference || undefined,
         notes: raw.notes || undefined,
       });
-      this.form.reset({ status: 'UNPAID', amount: 0 });
+      this.form.reset({ type: 'MEMBERSHIP', status: 'UNPAID', amount: this.membershipFee() });
+      this.selectedPlayer.set(null);
+      this.selectedPlayerPayments.set([]);
+      this.playerQuery.set('');
+      this.applyTypeDefaults('MEMBERSHIP');
       this.showForm.set(false);
       await this.load();
     } catch (error) {

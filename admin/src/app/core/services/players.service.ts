@@ -29,6 +29,11 @@ export interface PlayerListFilters {
 export class PlayersService {
   private readonly http = inject(HttpClient);
 
+  async get(id: string): Promise<Player> {
+    const response = await firstValueFrom(this.http.get<ApiResponse<Player>>(`${API_BASE_URL}/players/${id}`));
+    return response.data;
+  }
+
   async list(filters: PlayerListFilters = {}): Promise<Player[]> {
     let params = new HttpParams();
     if (filters.search) params = params.set('search', filters.search);

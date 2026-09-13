@@ -10,6 +10,29 @@
   }
 }
 
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+
+  &.active {
+    color: var(--brand-navy);
+    border-bottom-color: var(--brand-orange);
+  }
+}
+
 .create-form {
   background: var(--surface);
   border-radius: 8px;
@@ -22,6 +45,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 
   label {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -40,6 +64,131 @@
       outline: none;
       border-color: var(--brand-orange);
     }
+  }
+}
+
+.player-field {
+  position: relative;
+}
+
+.insurance-hint {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--error);
+
+  &.paid {
+    color: #1e7d34;
+  }
+}
+
+.player-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  max-height: 220px;
+  overflow-y: auto;
+
+  li button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 400;
+    border-radius: 4px;
+    color: var(--text);
+
+    &:hover {
+      background: #f4f4f4;
+    }
+  }
+}
+
+.status-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  input,
+  select {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+  }
+}
+
+.status-summary {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  flex: 1;
+  max-width: 200px;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 3px solid var(--border);
+
+  &.paid {
+    border-left-color: #1e7d34;
+  }
+  &.unpaid {
+    border-left-color: var(--error);
+  }
+}
+
+.summary-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--brand-navy);
+}
+
+.summary-label {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.status-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+
+  h2 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    color: var(--brand-navy);
   }
 }
 
@@ -166,6 +315,10 @@ table {
     color: #666;
   }
   &[data-status='OVERDUE'] {
+    background: #fdecea;
+    color: var(--error);
+  }
+  &[data-status='NONE'] {
     background: #fdecea;
     color: var(--error);
   }

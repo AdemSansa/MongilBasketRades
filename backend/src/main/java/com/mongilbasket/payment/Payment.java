@@ -26,9 +26,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** One payment record per player per billing period — corrected in place via PUT, not duplicated (same pattern as Attendance's one-mark-per-player-per-session). */
+/** One payment record per player per (period, type) — corrected in place via PUT, not duplicated (same pattern as Attendance's one-mark-per-player-per-session). */
 @Entity
-@Table(name = "payments", uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "period"}))
+@Table(name = "payments", uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "period", "type"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -56,9 +56,14 @@ public class Payment {
     @Builder.Default
     private String currency = "TND";
 
-    /** Billing period, e.g. "2026-09" — one calendar month. */
+    /** MEMBERSHIP: "YYYY-MM" calendar month. INSURANCE: the season's name — see PaymentType. */
     @Column(nullable = false)
     private String period;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private PaymentType type = PaymentType.MEMBERSHIP;
 
     /** Null until actually paid. */
     private LocalDate paymentDate;

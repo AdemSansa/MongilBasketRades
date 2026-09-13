@@ -15,4 +15,6 @@ public interface PlayerRepository extends JpaRepository<Player, UUID>, JpaSpecif
     long countByStatus(PlayerStatus status);
 
     List<Player> findByCurrentGroupIdAndStatus(UUID currentGroupId, PlayerStatus status);
+
+    List<Player> findByStatus(PlayerStatus status);
 }

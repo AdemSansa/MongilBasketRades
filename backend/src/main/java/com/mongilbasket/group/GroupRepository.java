@@ -15,4 +15,6 @@ public interface GroupRepository extends JpaRepository<Group, UUID> {
     List<Group> search(@Param("seasonId") UUID seasonId, @Param("status") GroupStatus status);
 
     List<Group> findByCoachIdAndStatus(UUID coachId, GroupStatus status);
+
+    List<Group> findByCoachId(UUID coachId);
 }

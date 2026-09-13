@@ -1,0 +1,36 @@
+<h1>Settings</h1>
+
+@if (errorMessage()) {
+  <div class="error-banner">
+    {{ errorMessage() }}
+    <button type="button" (click)="load()">Retry</button>
+  </div>
+}
+
+@if (isLoading()) {
+  <p class="muted">Loading…</p>
+} @else {
+  <form class="settings-form" [formGroup]="form" (ngSubmit)="submit()">
+    <h2>Fees</h2>
+
+    <label>
+      Membership fee (monthly, TND)
+      <input type="number" step="0.01" formControlName="membershipFeeMonthly" />
+      <span class="hint">Charged to every active player each month.</span>
+    </label>
+
+    <label>
+      Insurance fee (per season, TND)
+      <input type="number" step="0.01" formControlName="insuranceFeeYearly" />
+      <span class="hint">Paid once at the start of each season, not monthly.</span>
+    </label>
+
+    @if (savedMessage()) {
+      <div class="success-banner">Settings saved. New payments will default to these amounts.</div>
+    }
+
+    <button type="submit" class="primary" [disabled]="isSaving()">
+      {{ isSaving() ? 'Saving…' : 'Save settings' }}
+    </button>
+  </form>
+}

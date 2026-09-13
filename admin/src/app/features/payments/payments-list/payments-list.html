@@ -1,83 +1,24 @@
 <div class="header-row">
   <h1>Payments</h1>
-  <button type="button" class="primary" (click)="toggleForm()">
-    {{ showForm() ? 'Cancel' : '+ Record Payment' }}
-  </button>
-</div>
-
-@if (showForm()) {
-  <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
-    <label>
-      Player
-      <select formControlName="playerId">
-        <option value="" disabled>Select a player</option>
-        @for (player of players(); track player.id) {
-          <option [value]="player.id">{{ player.firstName }} {{ player.lastName }}</option>
-        }
-      </select>
-    </label>
-
-    <label>
-      Period (YYYY-MM)
-      <input type="text" formControlName="period" placeholder="2026-09" />
-    </label>
-
-    <label>
-      Amount
-      <input type="number" step="0.01" formControlName="amount" />
-    </label>
-
-    <label>
-      Status
-      <select formControlName="status">
-        @for (status of statuses; track status) {
-          <option [value]="status">{{ status }}</option>
-        }
-      </select>
-    </label>
-
-    <label>
-      Method (optional)
-      <select formControlName="method">
-        <option [value]="null">—</option>
-        @for (method of methods; track method) {
-          <option [value]="method">{{ method }}</option>
-        }
-      </select>
-    </label>
-
-    <label>
-      Payment date (optional)
-      <input type="date" formControlName="paymentDate" />
-    </label>
-
-    <label>
-      Reference (optional)
-      <input type="text" formControlName="reference" />
-    </label>
-
-    <label>
-      Notes (optional)
-      <input type="text" formControlName="notes" />
-    </label>
-
-    <button type="submit" class="primary" [disabled]="isSubmitting()">
-      {{ isSubmitting() ? 'Recording…' : 'Record payment' }}
-    </button>
-  </form>
-}
-
-<div class="filters">
-  @for (filter of statusFilters; track filter.label) {
-    <button
-      type="button"
-      class="filter-chip"
-      [class.active]="activeFilter() === filter.value"
-      (click)="setFilter(filter.value)"
-    >
-      {{ filter.label }}
+  @if (activeTab() === 'records') {
+    <button type="button" class="primary" (click)="toggleForm()">
+      {{ showForm() ? 'Cancel' : '+ Record Payment' }}
     </button>
   }
+</div>
+
+<div class="tabs">
+  <button type="button" class="tab" [class.active]="activeTab() === 'records'" (click)="setTab('records')">
+    All Records
+  </button>
+  <button
+    type="button"
+    class="tab"
+    [class.active]="activeTab() === 'monthly-status'"
+    (click)="setTab('monthly-status')"
+  >
+    Who Paid This Month
+  </button>
 </div>
 
 @if (errorMessage()) {
@@ -87,64 +28,301 @@
   </div>
 }
 
-@if (isLoading()) {
-  <p class="muted">Loading…</p>
-} @else if (payments().length === 0) {
-  <p class="muted">No payments in this filter.</p>
-} @else {
-  <div class="table-scroll">
-    <table>
-      <thead>
-        <tr>
-          <th>Player</th>
-          <th>Period</th>
-          <th>Amount</th>
-          <th>Status</th>
-          <th>Method</th>
-          <th>Paid on</th>
-          <th>Reference</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (payment of payments(); track payment.id) {
-          <tr>
-            <td>{{ payment.playerName }}</td>
-            <td>{{ payment.period }}</td>
-            <td>{{ payment.amount }} {{ payment.currency }}</td>
-            <td><span class="status-badge" [attr.data-status]="payment.status">{{ payment.status }}</span></td>
-            <td>{{ payment.method || '—' }}</td>
-            <td>{{ payment.paymentDate ? (payment.paymentDate | date: 'mediumDate') : '—' }}</td>
-            <td>{{ payment.reference || '—' }}</td>
-            <td>
-              @if (editingId() === payment.id) {
-                <form class="edit-inline" [formGroup]="editForm" (ngSubmit)="confirmEdit(payment)">
-                  <input type="number" step="0.01" formControlName="amount" />
-                  <select formControlName="status">
-                    @for (status of statuses; track status) {
-                      <option [value]="status">{{ status }}</option>
-                    }
-                  </select>
-                  <select formControlName="method">
-                    <option [value]="null">—</option>
-                    @for (method of methods; track method) {
-                      <option [value]="method">{{ method }}</option>
-                    }
-                  </select>
-                  <input type="date" formControlName="paymentDate" />
-                  <input type="text" placeholder="Reference" formControlName="reference" />
-                  <button type="submit" class="primary" [disabled]="actionInFlightId() === payment.id">
-                    Save
-                  </button>
-                  <button type="button" (click)="cancelEdit()">Cancel</button>
-                </form>
-              } @else {
-                <button type="button" class="primary" (click)="startEdit(payment)">Edit</button>
-              }
-            </td>
-          </tr>
+@if (activeTab() === 'records') {
+  @if (showForm()) {
+    <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
+      <label class="player-field">
+        Player
+        <input
+          type="text"
+          [value]="playerQuery()"
+          (input)="onPlayerQueryInput($any($event.target).value)"
+          (focus)="openPlayerDropdown()"
+          (blur)="closePlayerDropdownDelayed()"
+          placeholder="Type a player's name…"
+          autocomplete="off"
+        />
+        @if (playerDropdownOpen() && filteredPlayers().length > 0) {
+          <ul class="player-dropdown">
+            @for (player of filteredPlayers(); track player.id) {
+              <li>
+                <button type="button" (mousedown)="selectPlayer(player)">
+                  {{ player.firstName }} {{ player.lastName }}
+                </button>
+              </li>
+            }
+          </ul>
         }
-      </tbody>
-    </table>
+        @if (selectedPlayer() && activeSeason()) {
+          <span class="insurance-hint" [class.paid]="selectedPlayerStatus().insurance.paid">
+            Insurance ({{ activeSeason()!.name }}):
+            {{ selectedPlayerStatus().insurance.paid ? 'Paid' : 'Not paid' }}
+          </span>
+        }
+      </label>
+
+      <label>
+        Type
+        <select formControlName="type" (change)="onTypeChange($any($event.target).value)">
+          <option value="MEMBERSHIP">Membership (monthly)</option>
+          <option value="INSURANCE">Insurance (per season)</option>
+        </select>
+      </label>
+
+      @if (form.controls.type.value === 'MEMBERSHIP' && selectedPlayer() && activeSeason()) {
+        <label>
+          Month
+          <select
+            [ngModel]="form.controls.period.value"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="form.controls.period.setValue($event)"
+          >
+            @for (month of selectedPlayerStatus().months; track month.period) {
+              <option [value]="month.period" [disabled]="month.status === 'PAID'">
+                {{ month.label }}{{ month.status === 'PAID' ? ' — already paid' : '' }}
+              </option>
+            }
+          </select>
+        </label>
+      } @else {
+        <label>
+          Period {{ form.controls.type.value === 'MEMBERSHIP' ? '(YYYY-MM)' : '(season)' }}
+          <input type="text" formControlName="period" />
+        </label>
+      }
+
+      <label>
+        Amount (TND)
+        <input type="number" step="0.01" formControlName="amount" />
+      </label>
+
+      <label>
+        Status
+        <select formControlName="status">
+          @for (status of statuses; track status) {
+            <option [value]="status">{{ status }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Method (optional)
+        <select formControlName="method">
+          <option [value]="null">—</option>
+          @for (method of methods; track method) {
+            <option [value]="method">{{ method }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Payment date (optional)
+        <input type="date" formControlName="paymentDate" />
+      </label>
+
+      <label>
+        Reference (optional)
+        <input type="text" formControlName="reference" />
+      </label>
+
+      <label>
+        Notes (optional)
+        <input type="text" formControlName="notes" />
+      </label>
+
+      <button type="submit" class="primary" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Recording…' : 'Record payment' }}
+      </button>
+    </form>
+  }
+
+  <div class="filters">
+    @for (filter of statusFilters; track filter.label) {
+      <button
+        type="button"
+        class="filter-chip"
+        [class.active]="activeFilter() === filter.value"
+        (click)="setFilter(filter.value)"
+      >
+        {{ filter.label }}
+      </button>
+    }
   </div>
+
+  @if (isLoading()) {
+    <p class="muted">Loading…</p>
+  } @else if (payments().length === 0) {
+    <p class="muted">No payments in this filter.</p>
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Type</th>
+            <th>Period</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Method</th>
+            <th>Paid on</th>
+            <th>Reference</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (payment of payments(); track payment.id) {
+            <tr>
+              <td>{{ payment.playerName }}</td>
+              <td>{{ payment.type === 'MEMBERSHIP' ? 'Membership' : 'Insurance' }}</td>
+              <td>{{ payment.period }}</td>
+              <td>{{ payment.amount }} {{ payment.currency }}</td>
+              <td><span class="status-badge" [attr.data-status]="payment.status">{{ payment.status }}</span></td>
+              <td>{{ payment.method || '—' }}</td>
+              <td>{{ payment.paymentDate ? (payment.paymentDate | date: 'mediumDate') : '—' }}</td>
+              <td>{{ payment.reference || '—' }}</td>
+              <td>
+                @if (editingId() === payment.id) {
+                  <form class="edit-inline" [formGroup]="editForm" (ngSubmit)="confirmEdit(payment)">
+                    <input type="number" step="0.01" formControlName="amount" />
+                    <select formControlName="status">
+                      @for (status of statuses; track status) {
+                        <option [value]="status">{{ status }}</option>
+                      }
+                    </select>
+                    <select formControlName="method">
+                      <option [value]="null">—</option>
+                      @for (method of methods; track method) {
+                        <option [value]="method">{{ method }}</option>
+                      }
+                    </select>
+                    <input type="date" formControlName="paymentDate" />
+                    <input type="text" placeholder="Reference" formControlName="reference" />
+                    <button type="submit" class="primary" [disabled]="actionInFlightId() === payment.id">
+                      Save
+                    </button>
+                    <button type="button" (click)="cancelEdit()">Cancel</button>
+                  </form>
+                } @else {
+                  <button type="button" class="primary" (click)="startEdit(payment)">Edit</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+} @else {
+  <div class="status-filters">
+    <label>
+      Month
+      <select [ngModel]="statusMonth()" (ngModelChange)="statusMonth.set($event); loadMonthlyStatus()">
+        @for (name of monthNames; track name; let i = $index) {
+          <option [value]="i + 1">{{ name }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Year
+      <input
+        type="number"
+        [ngModel]="statusYear()"
+        (ngModelChange)="statusYear.set($event); loadMonthlyStatus()"
+      />
+    </label>
+
+    <label>
+      Coach (optional)
+      <select [ngModel]="statusCoachId()" (ngModelChange)="statusCoachId.set($event); loadMonthlyStatus()">
+        <option value="">All coaches</option>
+        @for (coach of coaches(); track coach.id) {
+          <option [value]="coach.id">{{ coach.firstName }} {{ coach.lastName }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  @if (isLoadingStatus()) {
+    <p class="muted">Loading…</p>
+  } @else if (monthlyStatus(); as status) {
+    <div class="status-summary">
+      <div class="summary-card paid">
+        <span class="summary-value">{{ paidRows().length }}</span>
+        <span class="summary-label">Paid</span>
+      </div>
+      <div class="summary-card unpaid">
+        <span class="summary-value">{{ unpaidRows().length }}</span>
+        <span class="summary-label">Not paid</span>
+      </div>
+    </div>
+
+    <div class="status-columns">
+      <div class="status-column">
+        <h2>Paid ({{ paidRows().length }})</h2>
+        @if (paidRows().length === 0) {
+          <p class="muted">No one yet.</p>
+        } @else {
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>Group</th>
+                  <th>Coach</th>
+                  <th>Amount</th>
+                  <th>Paid on</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of paidRows(); track row.playerId) {
+                  <tr>
+                    <td>{{ row.playerName }}</td>
+                    <td>{{ row.groupName }}</td>
+                    <td>{{ row.coachName }}</td>
+                    <td>{{ row.amount }}</td>
+                    <td>{{ row.paymentDate ? (row.paymentDate | date: 'mediumDate') : '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <div class="status-column">
+        <h2>Not Paid ({{ unpaidRows().length }})</h2>
+        @if (unpaidRows().length === 0) {
+          <p class="muted">Everyone has paid.</p>
+        } @else {
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>Group</th>
+                  <th>Coach</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of unpaidRows(); track row.playerId) {
+                  <tr>
+                    <td>{{ row.playerName }}</td>
+                    <td>{{ row.groupName }}</td>
+                    <td>{{ row.coachName }}</td>
+                    <td>
+                      <span class="status-badge" [attr.data-status]="row.status || 'NONE'">
+                        {{ row.status || 'No record' }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }
 }

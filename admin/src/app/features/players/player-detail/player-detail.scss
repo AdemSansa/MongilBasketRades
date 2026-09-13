@@ -1,0 +1,235 @@
+.back-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: var(--brand-navy);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0 0 4px;
+    color: var(--brand-navy);
+  }
+}
+
+.subline {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+h2 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  color: var(--brand-navy);
+}
+
+.error-banner,
+.warn-banner {
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.error-banner {
+  background: #fdecea;
+  color: var(--error);
+  border: 1px solid #f5c6cb;
+}
+
+.warn-banner {
+  background: #fff4e0;
+  color: #a2660a;
+  border: 1px solid #f5d9a8;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #eee;
+  color: #555;
+  height: fit-content;
+
+  &[data-status='ACTIVE'] {
+    background: #e3f7e8;
+    color: #1e7d34;
+  }
+  &[data-status='ARCHIVED'] {
+    background: #eee;
+    color: #666;
+  }
+}
+
+.insurance-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-left: 3px solid var(--error);
+
+  &.paid {
+    border-left-color: #1e7d34;
+  }
+
+  h2 {
+    margin: 0 0 4px;
+    font-size: 15px;
+  }
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.month-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--brand-orange);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &[data-status='PAID'] {
+    border-left: 3px solid #1e7d34;
+    background: #f3fbf5;
+  }
+
+  &[data-status='NONE'],
+  &[data-status='UNPAID'],
+  &[data-status='PARTIAL'],
+  &[data-status='OVERDUE'] {
+    border-left: 3px solid var(--error);
+  }
+}
+
+.month-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.month-status {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.record-panel {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  max-width: 420px;
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  input,
+  select {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--brand-orange);
+    }
+  }
+}
+
+.record-actions {
+  display: flex;
+  gap: 8px;
+
+  button {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  button.primary {
+    color: #fff;
+    background: var(--brand-orange);
+
+    &:hover:not(:disabled) {
+      background: var(--brand-orange-dark);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  button:not(.primary) {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+}
+
+button.primary {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--brand-orange);
+
+  &:hover:not(:disabled) {
+    background: var(--brand-orange-dark);
+  }
+}

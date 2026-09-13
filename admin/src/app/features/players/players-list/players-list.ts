@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { Coach } from '../../../core/models/coach.model';
 import { Group } from '../../../core/models/group.model';
@@ -30,7 +31,7 @@ const MONTHS = [
 ];
 
 @Component({
-  imports: [FormsModule, ReactiveFormsModule, DatePipe],
+  imports: [FormsModule, ReactiveFormsModule, DatePipe, RouterLink],
   selector: 'app-players-list',
   styleUrl: './players-list.scss',
   templateUrl: './players-list.html',

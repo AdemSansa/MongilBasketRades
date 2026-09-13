@@ -10,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mongilbasket.common.BadRequestException;
 import com.mongilbasket.common.ConflictException;
 import com.mongilbasket.common.NotFoundException;
 import com.mongilbasket.parent.Parent;
@@ -31,12 +32,16 @@ public class PaymentService {
 
     @Transactional
     public PaymentResponse create(PaymentCreateRequest request, User currentUser) {
+        validatePeriod(request.type(), request.period());
+
         Player player = playerRepository.findById(request.playerId())
                 .orElseThrow(() -> new NotFoundException("Player not found"));
 
-        if (paymentRepository.findByPlayerIdAndPeriod(player.getId(), request.period()).isPresent()) {
+        if (paymentRepository
+                .findByPlayerIdAndPeriodAndType(player.getId(), request.period(), request.type())
+                .isPresent()) {
             throw new ConflictException(
-                    "A payment record already exists for this player and period — use PUT to correct it");
+                    "A payment record already exists for this player, period and type — use PUT to correct it");
         }
 
         Parent parent = player.getParent();
@@ -46,6 +51,7 @@ public class PaymentService {
                 .parent(parent)
                 .amount(request.amount())
                 .currency(request.currency() != null ? request.currency() : "TND")
+                .type(request.type())
                 .period(request.period())
                 .paymentDate(request.paymentDate())
                 .method(request.method())
@@ -56,6 +62,12 @@ public class PaymentService {
                 .build();
 
         return PaymentResponse.from(paymentRepository.save(payment));
+    }
+
+    private void validatePeriod(PaymentType type, String period) {
+        if (type == PaymentType.MEMBERSHIP && !period.matches("\\d{4}-\\d{2}")) {
+            throw new BadRequestException("Membership period must be in YYYY-MM format");
+        }
     }
 
     @Transactional
@@ -74,11 +86,12 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public List<PaymentResponse> list(PaymentStatus status, String period, UUID playerId) {
+    public List<PaymentResponse> list(PaymentStatus status, String period, UUID playerId, PaymentType type) {
         List<Specification<Payment>> filters = Stream.of(
                         PaymentSpecifications.statusEquals(status),
                         PaymentSpecifications.periodEquals(period),
-                        PaymentSpecifications.playerIdEquals(playerId))
+                        PaymentSpecifications.playerIdEquals(playerId),
+                        PaymentSpecifications.typeEquals(type))
                 .filter(Objects::nonNull)
                 .toList();
 

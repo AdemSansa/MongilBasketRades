@@ -153,6 +153,7 @@
                 </div>
               } @else {
                 <button type="button" class="primary" (click)="startEdit(player)">Edit</button>
+                <a class="secondary" [routerLink]="['/dashboard/players', player.id]">Payments</a>
                 @if (player.status === 'ACTIVE') {
                   <button type="button" class="danger" (click)="startArchive(player)">Archive</button>
                 }

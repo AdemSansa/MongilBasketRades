@@ -133,7 +133,9 @@ button.primary {
   }
 }
 
-button.secondary {
+button.secondary,
+a.secondary {
+  display: inline-block;
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 8px 16px;
@@ -141,6 +143,8 @@ button.secondary {
   font-weight: 600;
   background: var(--surface);
   color: var(--text);
+  text-decoration: none;
+  margin-left: 6px;
 
   &:hover:not(:disabled) {
     border-color: var(--brand-navy);

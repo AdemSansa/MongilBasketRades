@@ -23,4 +23,9 @@ final class PaymentSpecifications {
         if (playerId == null) return null;
         return (root, query, cb) -> cb.equal(root.get("player").get("id"), playerId);
     }
+
+    static Specification<Payment> typeEquals(PaymentType type) {
+        if (type == null) return null;
+        return (root, query, cb) -> cb.equal(root.get("type"), type);
+    }
 }
