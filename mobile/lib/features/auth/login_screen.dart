@@ -59,6 +59,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  ClipOval(
+                    child: Image.asset(
+                      'assets/images/logo.jpg',
+                      width: 96,
+                      height: 96,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     'Mongil Basket Rades',
                     style: Theme.of(context).textTheme.headlineSmall,
