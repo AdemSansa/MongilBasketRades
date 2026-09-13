@@ -9,6 +9,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   PaymentType,
+  RevenueSummary,
 } from '../../../core/models/payment.model';
 import { Player } from '../../../core/models/player.model';
 import { Season } from '../../../core/models/season.model';
@@ -33,7 +34,40 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-type Tab = 'records' | 'monthly-status';
+type Tab = 'records' | 'monthly-status' | 'revenue';
+type RevenuePreset = 'today' | 'week' | 'month' | 'year' | 'all' | 'custom';
+
+function toDateString(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function revenueRangeFor(preset: RevenuePreset): { from: string | null; to: string | null } {
+  const now = new Date();
+  const today = toDateString(now);
+
+  switch (preset) {
+    case 'today':
+      return { from: today, to: today };
+    case 'week': {
+      const day = (now.getDay() + 6) % 7; // Monday = 0
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - day);
+      return { from: toDateString(monday), to: today };
+    }
+    case 'month': {
+      const first = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { from: toDateString(first), to: today };
+    }
+    case 'year': {
+      const first = new Date(now.getFullYear(), 0, 1);
+      return { from: toDateString(first), to: today };
+    }
+    case 'all':
+      return { from: null, to: null };
+    default:
+      return { from: null, to: null };
+  }
+}
 
 @Component({
   imports: [ReactiveFormsModule, FormsModule, DatePipe],
@@ -97,6 +131,14 @@ export class PaymentsList {
   readonly paidRows = computed(() => this.monthlyStatus()?.rows.filter((r) => r.status === 'PAID') ?? []);
   readonly unpaidRows = computed(() => this.monthlyStatus()?.rows.filter((r) => r.status !== 'PAID') ?? []);
 
+  // Revenue tab.
+  readonly allTimeRevenue = signal<RevenueSummary | null>(null);
+  readonly periodRevenue = signal<RevenueSummary | null>(null);
+  readonly revenuePreset = signal<RevenuePreset>('month');
+  readonly revenueFrom = signal<string>(toDateString(new Date()));
+  readonly revenueTo = signal<string>(toDateString(new Date()));
+  readonly isLoadingRevenue = signal(false);
+
   readonly form = this.fb.nonNullable.group({
     playerId: ['', Validators.required],
     type: ['MEMBERSHIP' as PaymentType, Validators.required],
@@ -121,6 +163,7 @@ export class PaymentsList {
   constructor() {
     this.load();
     this.loadLookups();
+    this.loadAllTimeRevenue();
   }
 
   private async loadLookups(): Promise<void> {
@@ -158,6 +201,41 @@ export class PaymentsList {
     this.activeTab.set(tab);
     if (tab === 'monthly-status' && !this.monthlyStatus()) {
       this.loadMonthlyStatus();
+    }
+    if (tab === 'revenue' && !this.periodRevenue()) {
+      this.setRevenuePreset('month');
+    }
+  }
+
+  async loadAllTimeRevenue(): Promise<void> {
+    try {
+      this.allTimeRevenue.set(await this.paymentsService.revenue());
+    } catch (error) {
+      this.errorMessage.set(extractErrorMessage(error));
+    }
+  }
+
+  setRevenuePreset(preset: RevenuePreset): void {
+    this.revenuePreset.set(preset);
+    if (preset !== 'custom') {
+      const range = revenueRangeFor(preset);
+      this.revenueFrom.set(range.from ?? '');
+      this.revenueTo.set(range.to ?? '');
+    }
+    this.loadPeriodRevenue();
+  }
+
+  async loadPeriodRevenue(): Promise<void> {
+    this.isLoadingRevenue.set(true);
+    this.errorMessage.set(null);
+    try {
+      const from = this.revenuePreset() === 'all' ? null : this.revenueFrom() || null;
+      const to = this.revenuePreset() === 'all' ? null : this.revenueTo() || null;
+      this.periodRevenue.set(await this.paymentsService.revenue(from, to));
+    } catch (error) {
+      this.errorMessage.set(extractErrorMessage(error));
+    } finally {
+      this.isLoadingRevenue.set(false);
     }
   }
 

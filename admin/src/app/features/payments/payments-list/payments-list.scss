@@ -10,11 +10,39 @@
   }
 }
 
+.credit-banner {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  background: var(--brand-navy);
+  color: #fff;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.credit-label {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.credit-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
 .tabs {
   display: flex;
   gap: 4px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--border);
+}
+
+.revenue-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .tab {

@@ -35,3 +35,12 @@ export interface MonthlyPaymentStatus {
   period: string;
   rows: PlayerPaymentStatusRow[];
 }
+
+export interface RevenueSummary {
+  from: string | null;
+  to: string | null;
+  total: number;
+  membershipTotal: number;
+  insuranceTotal: number;
+  paymentCount: number;
+}

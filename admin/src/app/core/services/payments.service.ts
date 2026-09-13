@@ -4,7 +4,14 @@ import { firstValueFrom } from 'rxjs';
 
 import { API_BASE_URL } from '../config/api-config';
 import { ApiResponse } from '../models/api-response.model';
-import { MonthlyPaymentStatus, Payment, PaymentMethod, PaymentStatus, PaymentType } from '../models/payment.model';
+import {
+  MonthlyPaymentStatus,
+  Payment,
+  PaymentMethod,
+  PaymentStatus,
+  PaymentType,
+  RevenueSummary,
+} from '../models/payment.model';
 
 export interface CreatePaymentRequest {
   playerId: string;
@@ -49,6 +56,17 @@ export class PaymentsService {
 
     const response = await firstValueFrom(
       this.http.get<ApiResponse<MonthlyPaymentStatus>>(`${API_BASE_URL}/payments/monthly-status`, { params }),
+    );
+    return response.data;
+  }
+
+  async revenue(from?: string | null, to?: string | null): Promise<RevenueSummary> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+
+    const response = await firstValueFrom(
+      this.http.get<ApiResponse<RevenueSummary>>(`${API_BASE_URL}/payments/revenue`, { params }),
     );
     return response.data;
   }

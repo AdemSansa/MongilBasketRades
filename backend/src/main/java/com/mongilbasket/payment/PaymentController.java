@@ -1,5 +1,6 @@
 package com.mongilbasket.payment;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +36,13 @@ public class PaymentController {
     public ApiResponse<MonthlyPaymentStatusResponse> monthlyStatus(
             @RequestParam int year, @RequestParam int month, @RequestParam(required = false) UUID coachId) {
         return ApiResponse.ok(paymentStatusReportService.build(year, month, coachId));
+    }
+
+    @GetMapping("/revenue")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<RevenueSummaryResponse> revenue(
+            @RequestParam(required = false) LocalDate from, @RequestParam(required = false) LocalDate to) {
+        return ApiResponse.ok(paymentService.revenueSummary(from, to));
     }
 
     @GetMapping

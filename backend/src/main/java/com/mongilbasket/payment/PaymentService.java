@@ -1,5 +1,7 @@
 package com.mongilbasket.payment;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -98,6 +100,31 @@ public class PaymentService {
         return paymentRepository.findAll(Specification.allOf(filters)).stream()
                 .map(PaymentResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public RevenueSummaryResponse revenueSummary(LocalDate from, LocalDate to) {
+        List<Specification<Payment>> filters = Stream.of(
+                        PaymentSpecifications.statusEquals(PaymentStatus.PAID),
+                        PaymentSpecifications.paymentDateGte(from),
+                        PaymentSpecifications.paymentDateLte(to))
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<Payment> payments = paymentRepository.findAll(Specification.allOf(filters));
+
+        BigDecimal membershipTotal = sumByType(payments, PaymentType.MEMBERSHIP);
+        BigDecimal insuranceTotal = sumByType(payments, PaymentType.INSURANCE);
+
+        return new RevenueSummaryResponse(
+                from, to, membershipTotal.add(insuranceTotal), membershipTotal, insuranceTotal, payments.size());
+    }
+
+    private BigDecimal sumByType(List<Payment> payments, PaymentType type) {
+        return payments.stream()
+                .filter(p -> p.getType() == type)
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Transactional(readOnly = true)

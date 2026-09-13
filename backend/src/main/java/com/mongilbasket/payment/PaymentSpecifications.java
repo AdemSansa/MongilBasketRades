@@ -1,5 +1,6 @@
 package com.mongilbasket.payment;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -27,5 +28,15 @@ final class PaymentSpecifications {
     static Specification<Payment> typeEquals(PaymentType type) {
         if (type == null) return null;
         return (root, query, cb) -> cb.equal(root.get("type"), type);
+    }
+
+    static Specification<Payment> paymentDateGte(LocalDate from) {
+        if (from == null) return null;
+        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("paymentDate"), from);
+    }
+
+    static Specification<Payment> paymentDateLte(LocalDate to) {
+        if (to == null) return null;
+        return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("paymentDate"), to);
     }
 }
