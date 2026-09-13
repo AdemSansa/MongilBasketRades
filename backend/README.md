@@ -37,6 +37,8 @@ Server starts on `http://localhost:8080`, API base path `/api`.
 | `DB_URL` | No | `jdbc:postgresql://localhost:5434/mongil_basket` | Override for non-local environments |
 | `DB_USERNAME` | No | `mongil_basket` | |
 | `DB_PASSWORD` | No | `mongil_basket_dev` | Dev-only default; override in every other environment |
+| `MAIL_USERNAME` | No | none | Gmail address used to send coach-account emails (see `POST /api/coaches`). If unset, sends are skipped with a log warning instead of failing account creation. |
+| `MAIL_PASSWORD` | No | none | A Gmail **App Password** for the above account (Google Account → Security → 2-Step Verification → App passwords) — never the real account password. |
 
 ## Testing
 

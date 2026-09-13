@@ -33,9 +33,19 @@ export const routes: Routes = [
           import('./features/players/players-list/players-list').then((m) => m.PlayersList),
       },
       {
+        path: 'players/:id',
+        loadComponent: () =>
+          import('./features/players/player-detail/player-detail').then((m) => m.PlayerDetail),
+      },
+      {
         path: 'groups',
         loadComponent: () =>
           import('./features/groups/groups-list/groups-list').then((m) => m.GroupsList),
+      },
+      {
+        path: 'coaches',
+        loadComponent: () =>
+          import('./features/coaches/coaches-list/coaches-list').then((m) => m.CoachesList),
       },
       {
         path: 'sessions',
@@ -46,6 +56,11 @@ export const routes: Routes = [
         path: 'payments',
         loadComponent: () =>
           import('./features/payments/payments-list/payments-list').then((m) => m.PaymentsList),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/settings/settings-page/settings-page').then((m) => m.SettingsPage),
       },
     ],
   },

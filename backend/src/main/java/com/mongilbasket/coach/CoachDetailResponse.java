@@ -1,10 +1,12 @@
 package com.mongilbasket.coach;
 
+import java.util.List;
 import java.util.UUID;
 
+import com.mongilbasket.group.Group;
 import com.mongilbasket.user.UserStatus;
 
-public record CoachResponse(
+public record CoachDetailResponse(
         UUID id,
         UUID userId,
         String firstName,
@@ -13,10 +15,10 @@ public record CoachResponse(
         String phone,
         String bio,
         UserStatus status,
-        int groupCount) {
+        List<CoachGroupSummary> groups) {
 
-    public static CoachResponse from(Coach coach, int groupCount) {
-        return new CoachResponse(
+    public static CoachDetailResponse from(Coach coach, List<Group> groups) {
+        return new CoachDetailResponse(
                 coach.getId(),
                 coach.getUser().getId(),
                 coach.getUser().getFirstName(),
@@ -25,6 +27,6 @@ public record CoachResponse(
                 coach.getUser().getPhone(),
                 coach.getBio(),
                 coach.getUser().getStatus(),
-                groupCount);
+                groups.stream().map(CoachGroupSummary::from).toList());
     }
 }

@@ -1,0 +1,139 @@
+<div class="header-row">
+  <h1>Coaches</h1>
+  <button type="button" class="primary" (click)="toggleForm()">
+    {{ showForm() ? 'Cancel' : '+ Register Coach' }}
+  </button>
+</div>
+
+@if (justRegisteredEmail()) {
+  <div class="success-banner">
+    Coach account created — login credentials were emailed to {{ justRegisteredEmail() }}.
+  </div>
+}
+
+@if (showForm()) {
+  <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
+    <label>
+      Email
+      <input type="email" formControlName="email" placeholder="coach@example.com" />
+    </label>
+
+    <label>
+      First name
+      <input type="text" formControlName="firstName" />
+    </label>
+
+    <label>
+      Last name
+      <input type="text" formControlName="lastName" />
+    </label>
+
+    <label>
+      Phone (optional)
+      <input type="text" formControlName="phone" />
+    </label>
+
+    <label class="bio-field">
+      Bio (optional)
+      <input type="text" formControlName="bio" />
+    </label>
+
+    <button type="submit" class="primary" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Registering…' : 'Register coach' }}
+    </button>
+  </form>
+}
+
+@if (errorMessage()) {
+  <div class="error-banner">
+    {{ errorMessage() }}
+    <button type="button" (click)="load()">Retry</button>
+  </div>
+}
+
+@if (isLoading()) {
+  <p class="muted">Loading…</p>
+} @else if (coaches().length === 0) {
+  <p class="muted">No coaches yet.</p>
+} @else {
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Groups</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (coach of coaches(); track coach.id) {
+          <tr>
+            @if (editingId() === coach.id) {
+              <td colspan="6">
+                <form class="edit-inline" [formGroup]="editForm" (ngSubmit)="confirmEdit(coach)">
+                  <input type="text" placeholder="First name" formControlName="firstName" />
+                  <input type="text" placeholder="Last name" formControlName="lastName" />
+                  <input type="text" placeholder="Phone" formControlName="phone" />
+                  <input type="text" placeholder="Bio" formControlName="bio" />
+                  <button type="submit" class="primary" [disabled]="actionInFlightId() === coach.id">
+                    Save
+                  </button>
+                  <button type="button" (click)="cancelEdit()">Cancel</button>
+                </form>
+              </td>
+            } @else {
+              <td>
+                <button type="button" class="link-button" (click)="toggleExpand(coach)">
+                  {{ coach.firstName }} {{ coach.lastName }}
+                </button>
+              </td>
+              <td>{{ coach.email }}</td>
+              <td>{{ coach.phone || '—' }}</td>
+              <td>{{ coach.groupCount }}</td>
+              <td><span class="status-badge" [attr.data-status]="coach.status">{{ coach.status }}</span></td>
+              <td>
+                <button type="button" class="primary" (click)="startEdit(coach)">Edit</button>
+                <button
+                  type="button"
+                  class="secondary"
+                  [disabled]="actionInFlightId() === coach.id"
+                  (click)="toggleStatus(coach)"
+                >
+                  {{ coach.status === 'ACTIVE' ? 'Deactivate' : 'Activate' }}
+                </button>
+              </td>
+            }
+          </tr>
+          @if (expandedId() === coach.id && editingId() !== coach.id) {
+            <tr class="detail-row">
+              <td colspan="6">
+                @if (isLoadingDetail()) {
+                  <p class="muted">Loading…</p>
+                } @else if (expandedDetail(); as detail) {
+                  <div class="detail-panel">
+                    @if (detail.bio) {
+                      <p><strong>Bio:</strong> {{ detail.bio }}</p>
+                    }
+                    <p>
+                      <strong>Groups:</strong>
+                      @if (detail.groups.length === 0) {
+                        No groups assigned.
+                      } @else {
+                        @for (group of detail.groups; track group.id; let last = $last) {
+                          {{ group.name }}{{ last ? '' : ', ' }}
+                        }
+                      }
+                    </p>
+                  </div>
+                }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+}

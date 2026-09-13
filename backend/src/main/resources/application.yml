@@ -11,6 +11,21 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5434/mongil_basket}
     username: ${DB_USERNAME:mongil_basket}
     password: ${DB_PASSWORD:mongil_basket_dev}
+  mail:
+    # Gmail SMTP with an app password (not the account's real password).
+    # Left blank by default so local dev without these env vars set can
+    # still start -- CoachService logs a warning and skips the send
+    # instead of failing coach creation when they're unset.
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 server:
   # Render (and most PaaS hosts) inject PORT and route traffic to whatever
