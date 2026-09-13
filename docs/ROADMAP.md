@@ -181,9 +181,9 @@ Not part of the numbered Phase 0–12 sequence (that sequence is backend + Flutt
 
 - [x] Payment entity — `backend/src/main/java/com/mongilbasket/payment/Payment.java` (unique constraint on player_id+period, corrected via PUT rather than duplicated)
 - [x] Record payment — `POST /api/payments` (ADMIN, 409 on duplicate player+period)
-- [x] Payment status — PAID/PARTIAL/UNPAID/OVERDUE, correctable via `PUT /api/payments/{id}`
+- [x] Payment status — PAID/UNPAID/OVERDUE, correctable via `PUT /api/payments/{id}`
 - [x] Payment history — `GET /api/players/{id}/payments` (ADMIN or owning PARENT), `GET /api/payments/me` (PARENT, all children)
-- [x] Admin payment dashboard — Angular `features/payments/payments-list/`: filter chips (All/Unpaid/Overdue/Partial/Paid), record-payment form, inline correction
+- [x] Admin payment dashboard — Angular `features/payments/payments-list/`: filter chips (All/Unpaid/Overdue/Paid), record-payment form, inline correction
 - [x] Parent payment view — Flutter `features/payments/player_payments_screen.dart`, opened via a "Payments" button on each approved child's card; per-month list matching §14's mockup
 
 ## Phase 10 — Dashboard ✅

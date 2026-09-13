@@ -1,4 +1,4 @@
-export type PaymentStatus = 'PAID' | 'PARTIAL' | 'UNPAID' | 'OVERDUE';
+export type PaymentStatus = 'PAID' | 'UNPAID' | 'OVERDUE';
 export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'OTHER';
 export type PaymentType = 'MEMBERSHIP' | 'INSURANCE';
 

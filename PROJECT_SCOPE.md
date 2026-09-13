@@ -505,7 +505,6 @@ Statuses:
 
 ```text
 PAID
-PARTIAL
 UNPAID
 OVERDUE
 ```

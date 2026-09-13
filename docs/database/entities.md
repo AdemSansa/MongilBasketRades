@@ -144,7 +144,7 @@ Unique constraint on `session_id, player_id`.
 | paymentDate | DATE, nullable | null until actually paid |
 | period | VARCHAR | e.g. "2026-09" (billing month) |
 | method | ENUM(CASH, BANK_TRANSFER, OTHER), nullable | |
-| status | ENUM(PAID, PARTIAL, UNPAID, OVERDUE) | |
+| status | ENUM(PAID, UNPAID, OVERDUE) | |
 | reference | VARCHAR, nullable | receipt/transfer ref |
 | recordedBy | FK → User | admin who logged it |
 | notes | TEXT, nullable | |

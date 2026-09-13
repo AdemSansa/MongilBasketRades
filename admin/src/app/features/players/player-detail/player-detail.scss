@@ -135,7 +135,6 @@ h2 {
 
   &[data-status='NONE'],
   &[data-status='UNPAID'],
-  &[data-status='PARTIAL'],
   &[data-status='OVERDUE'] {
     border-left: 3px solid var(--error);
   }

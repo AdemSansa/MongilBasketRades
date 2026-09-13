@@ -306,10 +306,6 @@ table {
     background: #e3f7e8;
     color: #1e7d34;
   }
-  &[data-status='PARTIAL'] {
-    background: #fff4e0;
-    color: #a2660a;
-  }
   &[data-status='UNPAID'] {
     background: #eee;
     color: #666;

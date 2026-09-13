@@ -9,7 +9,6 @@ import 'payments_providers.dart';
 
 const _statusColors = <String, Color>{
   'PAID': Colors.green,
-  'PARTIAL': Colors.orange,
   'UNPAID': Colors.blueGrey,
   'OVERDUE': Colors.red,
 };

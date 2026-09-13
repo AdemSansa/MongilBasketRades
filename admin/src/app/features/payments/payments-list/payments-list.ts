@@ -23,12 +23,11 @@ const STATUS_FILTERS: { value: PaymentStatus | null; label: string }[] = [
   { value: null, label: 'All' },
   { value: 'UNPAID', label: 'Unpaid' },
   { value: 'OVERDUE', label: 'Overdue' },
-  { value: 'PARTIAL', label: 'Partial' },
   { value: 'PAID', label: 'Paid' },
 ];
 
 const METHODS: PaymentMethod[] = ['CASH', 'BANK_TRANSFER', 'OTHER'];
-const STATUSES: PaymentStatus[] = ['PAID', 'PARTIAL', 'UNPAID', 'OVERDUE'];
+const STATUSES: PaymentStatus[] = ['PAID', 'UNPAID', 'OVERDUE'];
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
