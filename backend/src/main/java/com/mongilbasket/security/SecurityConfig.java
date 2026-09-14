@@ -57,7 +57,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/register",
-                                "/api/auth/refresh")
+                                "/api/auth/refresh",
+                                "/api/health")
                         .permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(eh -> eh.authenticationEntryPoint((request, response, authException) -> {
