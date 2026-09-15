@@ -7,11 +7,12 @@ name: Keep backend + database warm
 # DB query) from outside every 10 minutes to keep both from ever going
 # idle long enough to sleep.
 #
-# Caveat: GitHub's scheduled workflows are not real-time -- runs can be
-# delayed by several minutes under load, so this reduces cold starts but
-# doesn't guarantee zero. For a stronger guarantee, add a free external
-# uptime monitor (e.g. UptimeRobot, cron-job.org) pointed at the same
-# GET https://mongilbasketrades.onrender.com/api/health URL.
+# Confirmed unreliable in practice: GitHub ran this hours apart instead of
+# every 10 minutes (throttles scheduled workflows hard on repos like this
+# one), so it does not actually prevent Render's 15-min idle spin-down.
+# Kept as a low-value backup ping; add a free external uptime monitor
+# (e.g. UptimeRobot, cron-job.org) pointed at
+# GET https://mongilbasketrades.onrender.com/api/health for the real fix.
 on:
   schedule:
     - cron: '*/10 * * * *'
@@ -22,4 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping backend health endpoint
-        run: curl -sf -m 30 https://mongilbasketrades.onrender.com/api/health
+        # 90s, not 30s: a cold Render instance takes up to ~60s to wake, and
+        # a too-short timeout meant every ping during a cold start failed
+        # right as it was doing its job.
+        run: curl -sf -m 90 https://mongilbasketrades.onrender.com/api/health
