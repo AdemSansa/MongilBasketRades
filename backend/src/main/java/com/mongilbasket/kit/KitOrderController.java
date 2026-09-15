@@ -58,4 +58,10 @@ public class KitOrderController {
             @PathVariable UUID id, @Valid @RequestBody KitOrderStatusUpdateRequest request) {
         return ApiResponse.ok(kitOrderService.updateStatus(id, request));
     }
+
+    @PatchMapping("/status/batch")
+    public ApiResponse<List<KitOrderResponse>> updateStatusBatch(
+            @Valid @RequestBody KitOrderStatusBatchUpdateRequest request) {
+        return ApiResponse.ok(kitOrderService.updateStatusBatch(request));
+    }
 }

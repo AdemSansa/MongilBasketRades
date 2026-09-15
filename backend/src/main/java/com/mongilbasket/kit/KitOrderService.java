@@ -1,5 +1,7 @@
 package com.mongilbasket.kit;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -64,6 +66,13 @@ public class KitOrderService {
         return KitOrderResponse.from(order);
     }
 
+    @Transactional
+    public List<KitOrderResponse> updateStatusBatch(KitOrderStatusBatchUpdateRequest request) {
+        List<KitOrder> orders = kitOrderRepository.findAllById(request.ids());
+        orders.forEach(order -> order.setStatus(request.status()));
+        return orders.stream().map(KitOrderResponse::from).toList();
+    }
+
     @Transactional(readOnly = true)
     public List<KitOrderResponse> list(KitOrderStatus status, PaymentStatus paymentStatus, UUID playerId) {
         List<Specification<KitOrder>> filters = Stream.of(
@@ -76,6 +85,20 @@ public class KitOrderService {
         return kitOrderRepository.findAll(Specification.allOf(filters)).stream()
                 .map(KitOrderResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public KitRevenue revenue(LocalDate from, LocalDate to) {
+        List<Specification<KitOrder>> filters = Stream.of(
+                        KitOrderSpecifications.paymentStatusEquals(PaymentStatus.PAID),
+                        KitOrderSpecifications.paymentDateGte(from),
+                        KitOrderSpecifications.paymentDateLte(to))
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<KitOrder> orders = kitOrderRepository.findAll(Specification.allOf(filters));
+        BigDecimal total = orders.stream().map(KitOrder::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new KitRevenue(total, orders.size());
     }
 
     private KitOrder findByIdOrThrow(UUID id) {

@@ -42,5 +42,6 @@ export interface RevenueSummary {
   total: number;
   membershipTotal: number;
   insuranceTotal: number;
+  kitTotal: number;
   paymentCount: number;
 }

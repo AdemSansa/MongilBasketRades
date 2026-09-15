@@ -44,7 +44,24 @@ export class KitsList {
   readonly statusFilters = STATUS_FILTERS;
   readonly activeFilter = signal<KitOrderStatus | null>(null);
 
-  readonly orders = signal<KitOrder[]>([]);
+  /** Always the full unfiltered set, fetched once -- stats and the filter chips both derive from this instead of round-tripping per click. */
+  readonly allOrders = signal<KitOrder[]>([]);
+  readonly orders = computed(() => {
+    const filter = this.activeFilter();
+    return filter ? this.allOrders().filter((o) => o.status === filter) : this.allOrders();
+  });
+  readonly stats = computed(() => {
+    const all = this.allOrders();
+    const count = (status: KitOrderStatus) => all.filter((o) => o.status === status).length;
+    return {
+      total: all.length,
+      ordered: count('ORDERED'),
+      ready: count('READY'),
+      delivered: count('DELIVERED'),
+      cancelled: count('CANCELLED'),
+    };
+  });
+
   readonly players = signal<Player[]>([]);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
@@ -53,6 +70,17 @@ export class KitsList {
 
   readonly editingId = signal<string | null>(null);
   readonly actionInFlightId = signal<string | null>(null);
+  readonly isBulkActionInFlight = signal(false);
+
+  // Multi-select for bulk status updates.
+  readonly selectedIds = signal<ReadonlySet<string>>(new Set());
+  readonly selectedCount = computed(() => this.selectedIds().size);
+  readonly allVisibleSelected = computed(() => {
+    const visible = this.orders();
+    if (visible.length === 0) return false;
+    const selected = this.selectedIds();
+    return visible.every((o) => selected.has(o.id));
+  });
 
   readonly playerQuery = signal('');
   readonly playerDropdownOpen = signal(false);
@@ -105,7 +133,8 @@ export class KitsList {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      this.orders.set(await this.kitOrdersService.list(this.activeFilter()));
+      this.allOrders.set(await this.kitOrdersService.list());
+      this.selectedIds.set(new Set());
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {
@@ -115,12 +144,63 @@ export class KitsList {
 
   setFilter(status: KitOrderStatus | null): void {
     this.activeFilter.set(status);
-    this.load();
+    this.selectedIds.set(new Set());
   }
 
   toggleForm(): void {
     this.showForm.update((v) => !v);
   }
+
+  // --- Multi-select ---
+
+  isSelected(order: KitOrder): boolean {
+    return this.selectedIds().has(order.id);
+  }
+
+  toggleSelected(order: KitOrder): void {
+    const next = new Set(this.selectedIds());
+    if (next.has(order.id)) {
+      next.delete(order.id);
+    } else {
+      next.add(order.id);
+    }
+    this.selectedIds.set(next);
+  }
+
+  toggleSelectAllVisible(): void {
+    const visible = this.orders();
+    if (this.allVisibleSelected()) {
+      const next = new Set(this.selectedIds());
+      visible.forEach((o) => next.delete(o.id));
+      this.selectedIds.set(next);
+    } else {
+      const next = new Set(this.selectedIds());
+      visible.forEach((o) => next.add(o.id));
+      this.selectedIds.set(next);
+    }
+  }
+
+  clearSelection(): void {
+    this.selectedIds.set(new Set());
+  }
+
+  async bulkSetStatus(status: KitOrderStatus): Promise<void> {
+    const ids = Array.from(this.selectedIds());
+    if (ids.length === 0) return;
+
+    this.isBulkActionInFlight.set(true);
+    this.errorMessage.set(null);
+    try {
+      await this.kitOrdersService.setStatusBatch(ids, status);
+      await this.load();
+    } catch (error) {
+      this.errorMessage.set(extractErrorMessage(error));
+    } finally {
+      this.isBulkActionInFlight.set(false);
+    }
+  }
+
+  // --- Player combobox ---
 
   onPlayerQueryInput(value: string): void {
     this.playerQuery.set(value);

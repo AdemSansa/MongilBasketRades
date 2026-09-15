@@ -63,4 +63,11 @@ export class KitOrdersService {
     );
     return response.data;
   }
+
+  async setStatusBatch(ids: string[], status: KitOrderStatus): Promise<KitOrder[]> {
+    const response = await firstValueFrom(
+      this.http.patch<ApiResponse<KitOrder[]>>(`${API_BASE_URL}/kit-orders/status/batch`, { ids, status }),
+    );
+    return response.data;
+  }
 }

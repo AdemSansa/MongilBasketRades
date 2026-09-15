@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mongilbasket.common.BadRequestException;
 import com.mongilbasket.common.ConflictException;
 import com.mongilbasket.common.NotFoundException;
+import com.mongilbasket.kit.KitOrderService;
+import com.mongilbasket.kit.KitRevenue;
 import com.mongilbasket.parent.Parent;
 import com.mongilbasket.parent.ParentRepository;
 import com.mongilbasket.player.Player;
@@ -31,6 +33,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PlayerRepository playerRepository;
     private final ParentRepository parentRepository;
+    private final KitOrderService kitOrderService;
 
     @Transactional
     public PaymentResponse create(PaymentCreateRequest request, User currentUser) {
@@ -115,9 +118,16 @@ public class PaymentService {
 
         BigDecimal membershipTotal = sumByType(payments, PaymentType.MEMBERSHIP);
         BigDecimal insuranceTotal = sumByType(payments, PaymentType.INSURANCE);
+        KitRevenue kitRevenue = kitOrderService.revenue(from, to);
 
         return new RevenueSummaryResponse(
-                from, to, membershipTotal.add(insuranceTotal), membershipTotal, insuranceTotal, payments.size());
+                from,
+                to,
+                membershipTotal.add(insuranceTotal).add(kitRevenue.total()),
+                membershipTotal,
+                insuranceTotal,
+                kitRevenue.total(),
+                payments.size() + kitRevenue.count());
     }
 
     private BigDecimal sumByType(List<Payment> payments, PaymentType type) {

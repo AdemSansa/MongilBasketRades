@@ -5,6 +5,31 @@
   </button>
 </div>
 
+<div class="stats-row">
+  <div class="stat-card">
+    <span class="stat-value">{{ stats().total }}</span>
+    <span class="stat-label">Total orders</span>
+  </div>
+  <div class="stat-card ordered">
+    <span class="stat-value">{{ stats().ordered }}</span>
+    <span class="stat-label">Ordered</span>
+  </div>
+  <div class="stat-card ready">
+    <span class="stat-value">{{ stats().ready }}</span>
+    <span class="stat-label">Ready</span>
+  </div>
+  <div class="stat-card delivered">
+    <span class="stat-value">{{ stats().delivered }}</span>
+    <span class="stat-label">Delivered</span>
+  </div>
+  @if (stats().cancelled > 0) {
+    <div class="stat-card cancelled">
+      <span class="stat-value">{{ stats().cancelled }}</span>
+      <span class="stat-label">Cancelled</span>
+    </div>
+  }
+</div>
+
 @if (showForm()) {
   <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
     <label class="player-field">
@@ -105,6 +130,37 @@
   </div>
 }
 
+@if (selectedCount() > 0) {
+  <div class="bulk-bar">
+    <span>{{ selectedCount() }} selected</span>
+    <button
+      type="button"
+      class="secondary"
+      [disabled]="isBulkActionInFlight()"
+      (click)="bulkSetStatus('READY')"
+    >
+      Mark Ready
+    </button>
+    <button
+      type="button"
+      class="secondary"
+      [disabled]="isBulkActionInFlight()"
+      (click)="bulkSetStatus('DELIVERED')"
+    >
+      Mark Delivered
+    </button>
+    <button
+      type="button"
+      class="danger"
+      [disabled]="isBulkActionInFlight()"
+      (click)="bulkSetStatus('CANCELLED')"
+    >
+      Cancel
+    </button>
+    <button type="button" class="link-button" (click)="clearSelection()">Clear selection</button>
+  </div>
+}
+
 @if (isLoading()) {
   <p class="muted">Loading…</p>
 } @else if (orders().length === 0) {
@@ -114,6 +170,9 @@
     <table>
       <thead>
         <tr>
+          <th class="checkbox-col">
+            <input type="checkbox" [checked]="allVisibleSelected()" (change)="toggleSelectAllVisible()" />
+          </th>
           <th>Player</th>
           <th>Size</th>
           <th>Amount</th>
@@ -127,7 +186,7 @@
         @for (order of orders(); track order.id) {
           <tr>
             @if (editingId() === order.id) {
-              <td colspan="7">
+              <td colspan="8">
                 <form class="edit-inline" [formGroup]="editForm" (ngSubmit)="confirmEdit(order)">
                   <select formControlName="size">
                     @for (size of sizes; track size) {
@@ -155,6 +214,9 @@
                 </form>
               </td>
             } @else {
+              <td class="checkbox-col">
+                <input type="checkbox" [checked]="isSelected(order)" (change)="toggleSelected(order)" />
+              </td>
               <td>{{ order.playerName }}</td>
               <td>{{ order.size }}</td>
               <td>{{ order.amount }} TND</td>

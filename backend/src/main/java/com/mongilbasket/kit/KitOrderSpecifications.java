@@ -1,5 +1,6 @@
 package com.mongilbasket.kit;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -24,5 +25,15 @@ final class KitOrderSpecifications {
     static Specification<KitOrder> playerIdEquals(UUID playerId) {
         if (playerId == null) return null;
         return (root, query, cb) -> cb.equal(root.get("player").get("id"), playerId);
+    }
+
+    static Specification<KitOrder> paymentDateGte(LocalDate from) {
+        if (from == null) return null;
+        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("paymentDate"), from);
+    }
+
+    static Specification<KitOrder> paymentDateLte(LocalDate to) {
+        if (to == null) return null;
+        return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("paymentDate"), to);
     }
 }
