@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { PaginationBar } from '../../../core/components/pagination-bar/pagination-bar';
 import { Coach } from '../../../core/models/coach.model';
 import {
   MonthlyPaymentStatus,
@@ -70,7 +71,7 @@ function revenueRangeFor(preset: RevenuePreset): { from: string | null; to: stri
 }
 
 @Component({
-  imports: [ReactiveFormsModule, FormsModule, DatePipe],
+  imports: [ReactiveFormsModule, FormsModule, DatePipe, PaginationBar],
   selector: 'app-payments-list',
   styleUrl: './payments-list.scss',
   templateUrl: './payments-list.html',
@@ -91,6 +92,12 @@ export class PaymentsList {
   readonly activeTab = signal<Tab>('records');
 
   readonly payments = signal<Payment[]>([]);
+  readonly page = signal(1);
+  readonly pageSize = 25;
+  readonly pagedPayments = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.payments().slice(start, start + this.pageSize);
+  });
   readonly players = signal<Player[]>([]);
   readonly coaches = signal<Coach[]>([]);
   readonly activeSeason = signal<Season | null>(null);
@@ -130,6 +137,17 @@ export class PaymentsList {
   readonly isLoadingStatus = signal(false);
   readonly paidRows = computed(() => this.monthlyStatus()?.rows.filter((r) => r.status === 'PAID') ?? []);
   readonly unpaidRows = computed(() => this.monthlyStatus()?.rows.filter((r) => r.status !== 'PAID') ?? []);
+  readonly statusPageSize = 25;
+  readonly paidPage = signal(1);
+  readonly unpaidPage = signal(1);
+  readonly pagedPaidRows = computed(() => {
+    const start = (this.paidPage() - 1) * this.statusPageSize;
+    return this.paidRows().slice(start, start + this.statusPageSize);
+  });
+  readonly pagedUnpaidRows = computed(() => {
+    const start = (this.unpaidPage() - 1) * this.statusPageSize;
+    return this.unpaidRows().slice(start, start + this.statusPageSize);
+  });
 
   // Revenue tab.
   readonly allTimeRevenue = signal<RevenueSummary | null>(null);
@@ -190,6 +208,7 @@ export class PaymentsList {
     this.errorMessage.set(null);
     try {
       this.payments.set(await this.paymentsService.list(this.activeFilter()));
+      this.page.set(1);
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {
@@ -246,6 +265,8 @@ export class PaymentsList {
       this.monthlyStatus.set(
         await this.paymentsService.monthlyStatus(this.statusYear(), this.statusMonth(), this.statusCoachId() || null),
       );
+      this.paidPage.set(1);
+      this.unpaidPage.set(1);
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {

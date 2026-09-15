@@ -37,7 +37,7 @@
       </tr>
     </thead>
     <tbody>
-      @for (registration of registrations(); track registration.id) {
+      @for (registration of pagedRegistrations(); track registration.id) {
         <tr>
           <td>{{ registration.playerName }}</td>
           <td>{{ registration.requestedGroupName }}</td>
@@ -90,4 +90,10 @@
     </tbody>
   </table>
   </div>
+  <app-pagination-bar
+    [page]="page()"
+    [pageSize]="pageSize"
+    [total]="registrations().length"
+    (pageChange)="page.set($event)"
+  />
 }

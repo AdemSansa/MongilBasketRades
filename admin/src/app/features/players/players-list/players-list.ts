@@ -1,8 +1,9 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { PaginationBar } from '../../../core/components/pagination-bar/pagination-bar';
 import { Coach } from '../../../core/models/coach.model';
 import { Group } from '../../../core/models/group.model';
 import { Player } from '../../../core/models/player.model';
@@ -31,7 +32,7 @@ const MONTHS = [
 ];
 
 @Component({
-  imports: [FormsModule, ReactiveFormsModule, DatePipe, RouterLink],
+  imports: [FormsModule, ReactiveFormsModule, DatePipe, RouterLink, PaginationBar],
   selector: 'app-players-list',
   styleUrl: './players-list.scss',
   templateUrl: './players-list.html',
@@ -54,6 +55,12 @@ export class PlayersList {
   readonly searchTerm = signal('');
 
   readonly players = signal<Player[]>([]);
+  readonly page = signal(1);
+  readonly pageSize = 25;
+  readonly pagedPlayers = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.players().slice(start, start + this.pageSize);
+  });
   readonly groups = signal<Group[]>([]);
   readonly coaches = signal<Coach[]>([]);
   readonly isLoading = signal(true);
@@ -144,6 +151,7 @@ export class PlayersList {
           coachId: this.coachFilter(),
         }),
       );
+      this.page.set(1);
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {

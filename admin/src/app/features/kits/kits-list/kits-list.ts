@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { PaginationBar } from '../../../core/components/pagination-bar/pagination-bar';
 import { KitOrder, KitOrderStatus, KitSize } from '../../../core/models/kit-order.model';
 import { PaymentMethod, PaymentStatus } from '../../../core/models/payment.model';
 import { Player } from '../../../core/models/player.model';
@@ -34,7 +35,7 @@ const NEXT_STATUS: Partial<Record<KitOrderStatus, KitOrderStatus>> = {
 };
 
 @Component({
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, PaginationBar],
   selector: 'app-kits-list',
   styleUrl: './kits-list.scss',
   templateUrl: './kits-list.html',
@@ -61,6 +62,12 @@ export class KitsList {
     return this.allOrders().filter(
       (o) => (!statusFilter || o.status === statusFilter) && (!paymentFilter || o.paymentStatus === paymentFilter),
     );
+  });
+  readonly page = signal(1);
+  readonly pageSize = 25;
+  readonly pagedOrders = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.orders().slice(start, start + this.pageSize);
   });
   readonly stats = computed(() => {
     const all = this.allOrders();
@@ -149,6 +156,7 @@ export class KitsList {
     try {
       this.allOrders.set(await this.kitOrdersService.list());
       this.selectedIds.set(new Set());
+      this.page.set(1);
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {
@@ -159,11 +167,13 @@ export class KitsList {
   setFilter(status: KitOrderStatus | null): void {
     this.activeFilter.set(status);
     this.selectedIds.set(new Set());
+    this.page.set(1);
   }
 
   setPaymentFilter(status: PaymentStatus | null): void {
     this.activePaymentFilter.set(status);
     this.selectedIds.set(new Set());
+    this.page.set(1);
   }
 
   toggleForm(): void {

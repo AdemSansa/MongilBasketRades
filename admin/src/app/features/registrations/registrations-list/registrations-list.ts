@@ -1,7 +1,8 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { PaginationBar } from '../../../core/components/pagination-bar/pagination-bar';
 import { Registration, RegistrationStatus } from '../../../core/models/registration.model';
 import { RegistrationsService } from '../../../core/services/registrations.service';
 
@@ -15,7 +16,7 @@ const STATUS_FILTERS: { value: RegistrationStatus | null; label: string }[] = [
 ];
 
 @Component({
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, PaginationBar],
   selector: 'app-registrations-list',
   styleUrl: './registrations-list.scss',
   templateUrl: './registrations-list.html',
@@ -27,6 +28,12 @@ export class RegistrationsList {
   readonly activeFilter = signal<RegistrationStatus | null>('PENDING');
 
   readonly registrations = signal<Registration[]>([]);
+  readonly page = signal(1);
+  readonly pageSize = 25;
+  readonly pagedRegistrations = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.registrations().slice(start, start + this.pageSize);
+  });
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
 
@@ -49,6 +56,7 @@ export class RegistrationsList {
     this.errorMessage.set(null);
     try {
       this.registrations.set(await this.registrationsService.list(this.activeFilter()));
+      this.page.set(1);
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {

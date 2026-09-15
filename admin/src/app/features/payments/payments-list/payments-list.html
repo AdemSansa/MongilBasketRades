@@ -180,7 +180,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (payment of payments(); track payment.id) {
+          @for (payment of pagedPayments(); track payment.id) {
             <tr>
               <td>{{ payment.playerName }}</td>
               <td>{{ payment.type === 'MEMBERSHIP' ? 'Membership' : 'Insurance' }}</td>
@@ -221,6 +221,12 @@
         </tbody>
       </table>
     </div>
+    <app-pagination-bar
+      [page]="page()"
+      [pageSize]="pageSize"
+      [total]="payments().length"
+      (pageChange)="page.set($event)"
+    />
   }
 } @else if (activeTab() === 'monthly-status') {
   <div class="status-filters">
@@ -285,7 +291,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (row of paidRows(); track row.playerId) {
+                @for (row of pagedPaidRows(); track row.playerId) {
                   <tr>
                     <td>{{ row.playerName }}</td>
                     <td>{{ row.groupName }}</td>
@@ -297,6 +303,12 @@
               </tbody>
             </table>
           </div>
+          <app-pagination-bar
+            [page]="paidPage()"
+            [pageSize]="statusPageSize"
+            [total]="paidRows().length"
+            (pageChange)="paidPage.set($event)"
+          />
         }
       </div>
 
@@ -316,7 +328,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (row of unpaidRows(); track row.playerId) {
+                @for (row of pagedUnpaidRows(); track row.playerId) {
                   <tr>
                     <td>{{ row.playerName }}</td>
                     <td>{{ row.groupName }}</td>
@@ -331,6 +343,12 @@
               </tbody>
             </table>
           </div>
+          <app-pagination-bar
+            [page]="unpaidPage()"
+            [pageSize]="statusPageSize"
+            [total]="unpaidRows().length"
+            (pageChange)="unpaidPage.set($event)"
+          />
         }
       </div>
     </div>

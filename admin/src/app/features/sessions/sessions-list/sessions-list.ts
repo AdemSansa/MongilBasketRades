@@ -1,14 +1,15 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { PaginationBar } from '../../../core/components/pagination-bar/pagination-bar';
 import { Group } from '../../../core/models/group.model';
 import { TrainingSession } from '../../../core/models/session.model';
 import { GroupsService } from '../../../core/services/groups.service';
 import { SessionsService } from '../../../core/services/sessions.service';
 
 @Component({
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, PaginationBar],
   selector: 'app-sessions-list',
   styleUrl: './sessions-list.scss',
   templateUrl: './sessions-list.html',
@@ -19,6 +20,12 @@ export class SessionsList {
   private readonly groupsService = inject(GroupsService);
 
   readonly sessions = signal<TrainingSession[]>([]);
+  readonly page = signal(1);
+  readonly pageSize = 25;
+  readonly pagedSessions = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.sessions().slice(start, start + this.pageSize);
+  });
   readonly groups = signal<Group[]>([]);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
@@ -44,6 +51,7 @@ export class SessionsList {
     try {
       const [sessions, groups] = await Promise.all([this.sessionsService.list(), this.groupsService.list()]);
       this.sessions.set(sessions);
+      this.page.set(1);
       this.groups.set(groups);
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));

@@ -69,7 +69,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (session of sessions(); track session.id) {
+        @for (session of pagedSessions(); track session.id) {
           <tr>
             <td>{{ session.groupName }}</td>
             <td>{{ session.coachName }}</td>
@@ -94,4 +94,10 @@
       </tbody>
     </table>
   </div>
+  <app-pagination-bar
+    [page]="page()"
+    [pageSize]="pageSize"
+    [total]="sessions().length"
+    (pageChange)="page.set($event)"
+  />
 }
