@@ -28,6 +28,14 @@
       <span class="stat-label">Cancelled</span>
     </div>
   }
+  <div class="stat-card unpaid">
+    <span class="stat-value">{{ stats().unpaid }}</span>
+    <span class="stat-label">Not paid</span>
+  </div>
+  <div class="stat-card paid">
+    <span class="stat-value">{{ stats().paid }}</span>
+    <span class="stat-label">Paid</span>
+  </div>
 </div>
 
 @if (showForm()) {
@@ -110,17 +118,36 @@
   </form>
 }
 
-<div class="filters">
-  @for (filter of statusFilters; track filter.label) {
-    <button
-      type="button"
-      class="filter-chip"
-      [class.active]="activeFilter() === filter.value"
-      (click)="setFilter(filter.value)"
-    >
-      {{ filter.label }}
-    </button>
-  }
+<div class="filter-group">
+  <span class="filter-group-label">Status</span>
+  <div class="filters">
+    @for (filter of statusFilters; track filter.label) {
+      <button
+        type="button"
+        class="filter-chip"
+        [class.active]="activeFilter() === filter.value"
+        (click)="setFilter(filter.value)"
+      >
+        {{ filter.label }}
+      </button>
+    }
+  </div>
+</div>
+
+<div class="filter-group">
+  <span class="filter-group-label">Payment</span>
+  <div class="filters">
+    @for (filter of paymentFilters; track filter.label) {
+      <button
+        type="button"
+        class="filter-chip"
+        [class.active]="activePaymentFilter() === filter.value"
+        (click)="setPaymentFilter(filter.value)"
+      >
+        {{ filter.label }}
+      </button>
+    }
+  </div>
 </div>
 
 @if (errorMessage()) {

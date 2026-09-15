@@ -21,6 +21,13 @@ const STATUS_FILTERS: { value: KitOrderStatus | null; label: string }[] = [
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
 
+const PAYMENT_FILTERS: { value: PaymentStatus | null; label: string }[] = [
+  { value: null, label: 'All' },
+  { value: 'UNPAID', label: 'Not paid' },
+  { value: 'OVERDUE', label: 'Overdue' },
+  { value: 'PAID', label: 'Paid' },
+];
+
 const NEXT_STATUS: Partial<Record<KitOrderStatus, KitOrderStatus>> = {
   ORDERED: 'READY',
   READY: 'DELIVERED',
@@ -42,13 +49,18 @@ export class KitsList {
   readonly methods = METHODS;
   readonly paymentStatuses = PAYMENT_STATUSES;
   readonly statusFilters = STATUS_FILTERS;
+  readonly paymentFilters = PAYMENT_FILTERS;
   readonly activeFilter = signal<KitOrderStatus | null>(null);
+  readonly activePaymentFilter = signal<PaymentStatus | null>(null);
 
   /** Always the full unfiltered set, fetched once -- stats and the filter chips both derive from this instead of round-tripping per click. */
   readonly allOrders = signal<KitOrder[]>([]);
   readonly orders = computed(() => {
-    const filter = this.activeFilter();
-    return filter ? this.allOrders().filter((o) => o.status === filter) : this.allOrders();
+    const statusFilter = this.activeFilter();
+    const paymentFilter = this.activePaymentFilter();
+    return this.allOrders().filter(
+      (o) => (!statusFilter || o.status === statusFilter) && (!paymentFilter || o.paymentStatus === paymentFilter),
+    );
   });
   readonly stats = computed(() => {
     const all = this.allOrders();
@@ -59,6 +71,8 @@ export class KitsList {
       ready: count('READY'),
       delivered: count('DELIVERED'),
       cancelled: count('CANCELLED'),
+      unpaid: all.filter((o) => o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED').length,
+      paid: all.filter((o) => o.paymentStatus === 'PAID').length,
     };
   });
 
@@ -144,6 +158,11 @@ export class KitsList {
 
   setFilter(status: KitOrderStatus | null): void {
     this.activeFilter.set(status);
+    this.selectedIds.set(new Set());
+  }
+
+  setPaymentFilter(status: PaymentStatus | null): void {
+    this.activePaymentFilter.set(status);
     this.selectedIds.set(new Set());
   }
 
