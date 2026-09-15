@@ -25,6 +25,12 @@
       <span class="hint">Paid once at the start of each season, not monthly.</span>
     </label>
 
+    <label>
+      Kit fee (TND)
+      <input type="number" step="0.01" formControlName="kitFee" />
+      <span class="hint">Standard team kit price, regardless of size.</span>
+    </label>
+
     @if (savedMessage()) {
       <div class="success-banner">Settings saved. New payments will default to these amounts.</div>
     }

@@ -9,6 +9,7 @@ import { AppSettings } from '../models/settings.model';
 export interface SettingsUpdateRequest {
   membershipFeeMonthly: number;
   insuranceFeeYearly: number;
+  kitFee: number;
 }
 
 @Injectable({ providedIn: 'root' })

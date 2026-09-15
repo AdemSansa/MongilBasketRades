@@ -13,6 +13,7 @@ public class AppSettingsService {
 
     private static final BigDecimal DEFAULT_MEMBERSHIP_FEE = new BigDecimal("50.00");
     private static final BigDecimal DEFAULT_INSURANCE_FEE = new BigDecimal("60.00");
+    private static final BigDecimal DEFAULT_KIT_FEE = new BigDecimal("50.00");
 
     private final AppSettingsRepository settingsRepository;
 
@@ -26,6 +27,7 @@ public class AppSettingsService {
         AppSettings settings = getOrCreate();
         settings.setMembershipFeeMonthly(request.membershipFeeMonthly());
         settings.setInsuranceFeeYearly(request.insuranceFeeYearly());
+        settings.setKitFee(request.kitFee());
         return SettingsResponse.from(settings);
     }
 
@@ -34,6 +36,7 @@ public class AppSettingsService {
                 .id(1)
                 .membershipFeeMonthly(DEFAULT_MEMBERSHIP_FEE)
                 .insuranceFeeYearly(DEFAULT_INSURANCE_FEE)
+                .kitFee(DEFAULT_KIT_FEE)
                 .build()));
     }
 }

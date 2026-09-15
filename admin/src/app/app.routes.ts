@@ -58,6 +58,11 @@ export const routes: Routes = [
           import('./features/payments/payments-list/payments-list').then((m) => m.PaymentsList),
       },
       {
+        path: 'kits',
+        loadComponent: () =>
+          import('./features/kits/kits-list/kits-list').then((m) => m.KitsList),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings-page/settings-page').then((m) => m.SettingsPage),

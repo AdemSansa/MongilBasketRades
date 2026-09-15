@@ -7,4 +7,5 @@ import jakarta.validation.constraints.NotNull;
 
 public record SettingsUpdateRequest(
         @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal membershipFeeMonthly,
-        @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal insuranceFeeYearly) {}
+        @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal insuranceFeeYearly,
+        @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal kitFee) {}

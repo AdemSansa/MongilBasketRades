@@ -36,6 +36,10 @@ public class AppSettings {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal insuranceFeeYearly;
 
+    /** Standard team kit price, regardless of size. */
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal kitFee;
+
     @UpdateTimestamp
     @Column(nullable = false)
     private Instant updatedAt;

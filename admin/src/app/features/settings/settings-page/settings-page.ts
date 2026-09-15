@@ -21,6 +21,7 @@ export class SettingsPage {
   readonly form = this.fb.nonNullable.group({
     membershipFeeMonthly: [50, [Validators.required, Validators.min(0.01)]],
     insuranceFeeYearly: [60, [Validators.required, Validators.min(0.01)]],
+    kitFee: [50, [Validators.required, Validators.min(0.01)]],
   });
 
   constructor() {
@@ -35,6 +36,7 @@ export class SettingsPage {
       this.form.setValue({
         membershipFeeMonthly: settings.membershipFeeMonthly,
         insuranceFeeYearly: settings.insuranceFeeYearly,
+        kitFee: settings.kitFee,
       });
     } catch (error) {
       this.errorMessage.set(extractErrorMessage(error));

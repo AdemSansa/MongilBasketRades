@@ -1,0 +1,195 @@
+<div class="header-row">
+  <h1>Team Kits</h1>
+  <button type="button" class="primary" (click)="toggleForm()">
+    {{ showForm() ? 'Cancel' : '+ New Kit Order' }}
+  </button>
+</div>
+
+@if (showForm()) {
+  <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
+    <label class="player-field">
+      Player
+      <input
+        type="text"
+        [value]="playerQuery()"
+        (input)="onPlayerQueryInput($any($event.target).value)"
+        (focus)="openPlayerDropdown()"
+        (blur)="closePlayerDropdownDelayed()"
+        placeholder="Type a player's name…"
+        autocomplete="off"
+      />
+      @if (playerDropdownOpen() && filteredPlayers().length > 0) {
+        <ul class="player-dropdown">
+          @for (player of filteredPlayers(); track player.id) {
+            <li>
+              <button type="button" (mousedown)="selectPlayer(player)">
+                {{ player.firstName }} {{ player.lastName }}
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </label>
+
+    <label>
+      Size
+      <select formControlName="size">
+        @for (size of sizes; track size) {
+          <option [value]="size">{{ size }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Amount (TND)
+      <input type="number" step="0.01" formControlName="amount" />
+    </label>
+
+    <label>
+      Payment status
+      <select formControlName="paymentStatus">
+        @for (status of paymentStatuses; track status) {
+          <option [value]="status">{{ status }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Method (optional)
+      <select formControlName="method">
+        <option [value]="null">—</option>
+        @for (method of methods; track method) {
+          <option [value]="method">{{ method }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Payment date (optional)
+      <input type="date" formControlName="paymentDate" />
+    </label>
+
+    <label>
+      Reference (optional)
+      <input type="text" formControlName="reference" />
+    </label>
+
+    <label>
+      Notes (optional)
+      <input type="text" formControlName="notes" />
+    </label>
+
+    <button type="submit" class="primary" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Recording…' : 'Record order' }}
+    </button>
+  </form>
+}
+
+<div class="filters">
+  @for (filter of statusFilters; track filter.label) {
+    <button
+      type="button"
+      class="filter-chip"
+      [class.active]="activeFilter() === filter.value"
+      (click)="setFilter(filter.value)"
+    >
+      {{ filter.label }}
+    </button>
+  }
+</div>
+
+@if (errorMessage()) {
+  <div class="error-banner">
+    {{ errorMessage() }}
+    <button type="button" (click)="load()">Retry</button>
+  </div>
+}
+
+@if (isLoading()) {
+  <p class="muted">Loading…</p>
+} @else if (orders().length === 0) {
+  <p class="muted">No kit orders in this filter.</p>
+} @else {
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Size</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Payment</th>
+          <th>Ordered on</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (order of orders(); track order.id) {
+          <tr>
+            @if (editingId() === order.id) {
+              <td colspan="7">
+                <form class="edit-inline" [formGroup]="editForm" (ngSubmit)="confirmEdit(order)">
+                  <select formControlName="size">
+                    @for (size of sizes; track size) {
+                      <option [value]="size">{{ size }}</option>
+                    }
+                  </select>
+                  <input type="number" step="0.01" formControlName="amount" />
+                  <select formControlName="paymentStatus">
+                    @for (status of paymentStatuses; track status) {
+                      <option [value]="status">{{ status }}</option>
+                    }
+                  </select>
+                  <select formControlName="method">
+                    <option [value]="null">—</option>
+                    @for (method of methods; track method) {
+                      <option [value]="method">{{ method }}</option>
+                    }
+                  </select>
+                  <input type="date" formControlName="paymentDate" />
+                  <input type="text" placeholder="Reference" formControlName="reference" />
+                  <button type="submit" class="primary" [disabled]="actionInFlightId() === order.id">
+                    Save
+                  </button>
+                  <button type="button" (click)="cancelEdit()">Cancel</button>
+                </form>
+              </td>
+            } @else {
+              <td>{{ order.playerName }}</td>
+              <td>{{ order.size }}</td>
+              <td>{{ order.amount }} TND</td>
+              <td><span class="status-badge" [attr.data-status]="order.status">{{ order.status }}</span></td>
+              <td>
+                <span class="status-badge" [attr.data-status]="order.paymentStatus">{{ order.paymentStatus }}</span>
+              </td>
+              <td>{{ order.createdAt | date: 'mediumDate' }}</td>
+              <td>
+                <button type="button" class="primary" (click)="startEdit(order)">Edit</button>
+                @if (nextStatus(order); as next) {
+                  <button
+                    type="button"
+                    class="secondary"
+                    [disabled]="actionInFlightId() === order.id"
+                    (click)="advanceStatus(order)"
+                  >
+                    Mark {{ next }}
+                  </button>
+                }
+                @if (order.status !== 'DELIVERED' && order.status !== 'CANCELLED') {
+                  <button
+                    type="button"
+                    class="danger"
+                    [disabled]="actionInFlightId() === order.id"
+                    (click)="cancelOrder(order)"
+                  >
+                    Cancel
+                  </button>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
