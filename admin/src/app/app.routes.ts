@@ -48,6 +48,11 @@ export const routes: Routes = [
           import('./features/coaches/coaches-list/coaches-list').then((m) => m.CoachesList),
       },
       {
+        path: 'parents',
+        loadComponent: () =>
+          import('./features/parents/parents-list/parents-list').then((m) => m.ParentsList),
+      },
+      {
         path: 'sessions',
         loadComponent: () =>
           import('./features/sessions/sessions-list/sessions-list').then((m) => m.SessionsList),

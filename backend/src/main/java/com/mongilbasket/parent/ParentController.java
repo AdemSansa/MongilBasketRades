@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -49,8 +50,29 @@ public class ParentController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<ParentResponse> get(@PathVariable UUID id) {
+    public ApiResponse<ParentDetailResponse> get(@PathVariable UUID id) {
         return ApiResponse.ok(parentService.get(id));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<ParentResponse> adminUpdate(
+            @PathVariable UUID id, @Valid @RequestBody ParentAdminUpdateRequest request) {
+        return ApiResponse.ok(parentService.adminUpdate(id, request));
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<ParentResponse> updateStatus(
+            @PathVariable UUID id, @Valid @RequestBody ParentStatusUpdateRequest request) {
+        return ApiResponse.ok(parentService.updateStatus(id, request));
+    }
+
+    @PostMapping("/{id}/reset-password")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> resetPassword(@PathVariable UUID id) {
+        parentService.resetPassword(id);
+        return ApiResponse.ok("Password reset and emailed");
     }
 
     @PutMapping("/me")

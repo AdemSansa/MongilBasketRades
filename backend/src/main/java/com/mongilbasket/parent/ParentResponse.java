@@ -2,6 +2,8 @@ package com.mongilbasket.parent;
 
 import java.util.UUID;
 
+import com.mongilbasket.user.UserStatus;
+
 public record ParentResponse(
         UUID id,
         UUID userId,
@@ -10,6 +12,7 @@ public record ParentResponse(
         String lastName,
         String phone,
         String address,
+        UserStatus status,
         int childCount) {
 
     public static ParentResponse from(Parent parent, int childCount) {
@@ -22,6 +25,7 @@ public record ParentResponse(
                 user.getLastName(),
                 user.getPhone(),
                 parent.getAddress(),
+                user.getStatus(),
                 childCount);
     }
 }

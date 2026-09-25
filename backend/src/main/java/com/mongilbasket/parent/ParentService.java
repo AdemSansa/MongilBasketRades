@@ -41,10 +41,58 @@ public class ParentService {
     }
 
     @Transactional(readOnly = true)
-    public ParentResponse get(UUID id) {
-        Parent parent = parentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Parent not found"));
+    public ParentDetailResponse get(UUID id) {
+        Parent parent = findByIdOrThrow(id);
+        var children = playerRepository.findByParentId(parent.getId()).stream().map(PlayerResponse::from).toList();
+        return new ParentDetailResponse(ParentResponse.from(parent, children.size()), children);
+    }
+
+    @Transactional
+    public ParentResponse adminUpdate(UUID id, ParentAdminUpdateRequest request) {
+        Parent parent = findByIdOrThrow(id);
+        User user = parent.getUser();
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        user.setPhone(request.phone());
+        parent.setAddress(request.address());
         return toResponse(parent);
+    }
+
+    /** INACTIVE accounts can no longer log in (User.isEnabled), without deleting the parent or unlinking children. */
+    @Transactional
+    public ParentResponse updateStatus(UUID id, ParentStatusUpdateRequest request) {
+        Parent parent = findByIdOrThrow(id);
+        parent.getUser().setStatus(request.status());
+        return toResponse(parent);
+    }
+
+    /** Sets a fresh generated password and emails it -- the old one stops working immediately. */
+    @Transactional
+    public void resetPassword(UUID id) {
+        Parent parent = findByIdOrThrow(id);
+        User user = parent.getUser();
+        String temporaryPassword = PasswordGenerator.generate();
+        user.setPasswordHash(passwordEncoder.encode(temporaryPassword));
+        emailService.send(
+                user.getEmail(),
+                "Your Mongil Basket Rades password was reset",
+                """
+                Hi %s,
+
+                Your password was reset by the academy.
+
+                Email: %s
+                New temporary password: %s
+
+                Please change your password after signing in.
+
+                -- Mongil Basket Rades
+                """
+                        .formatted(user.getFirstName(), user.getEmail(), temporaryPassword));
+    }
+
+    private Parent findByIdOrThrow(UUID id) {
+        return parentRepository.findById(id).orElseThrow(() -> new NotFoundException("Parent not found"));
     }
 
     /** Creates the parent's User + Parent profile with a generated password and emails it, same as coach registration. */
