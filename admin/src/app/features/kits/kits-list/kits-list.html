@@ -254,6 +254,9 @@
               <td>{{ order.createdAt | date: 'mediumDate' }}</td>
               <td>
                 <button type="button" class="primary" (click)="startEdit(order)">Edit</button>
+                @if (order.paymentStatus === 'PAID') {
+                  <button type="button" class="secondary" (click)="downloadReceipt(order)">Receipt</button>
+                }
                 @if (nextStatus(order); as next) {
                   <button
                     type="button"

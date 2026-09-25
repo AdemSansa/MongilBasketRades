@@ -19,6 +19,7 @@ import { PaymentsService } from '../../../core/services/payments.service';
 import { PlayersService } from '../../../core/services/players.service';
 import { SeasonsService } from '../../../core/services/seasons.service';
 import { SettingsService } from '../../../core/services/settings.service';
+import { downloadReceiptPdf } from '../../../core/utils/receipt.util';
 import { MonthPaymentStatus, derivePlayerPaymentStatus } from '../../../core/utils/payment-status.util';
 
 const STATUS_FILTERS: { value: PaymentStatus | null; label: string }[] = [
@@ -379,6 +380,31 @@ export class PaymentsList {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {
       this.isSubmitting.set(false);
+    }
+  }
+
+  async downloadReceipt(payment: Payment): Promise<void> {
+    const isMembership = payment.type === 'MEMBERSHIP';
+    let detail = `Season ${payment.period}`;
+    if (isMembership) {
+      const [year, month] = payment.period.split('-').map(Number);
+      detail = `${MONTH_NAMES[month - 1]} ${year}`;
+    }
+    try {
+      await downloadReceiptPdf({
+        id: payment.id,
+        playerName: payment.playerName,
+        description: isMembership ? 'Monthly membership' : 'Insurance',
+        detail,
+        amount: payment.amount,
+        currency: payment.currency,
+        paymentDate: payment.paymentDate,
+        method: payment.method,
+        reference: payment.reference,
+        notes: payment.notes,
+      });
+    } catch (error) {
+      this.errorMessage.set(extractErrorMessage(error));
     }
   }
 

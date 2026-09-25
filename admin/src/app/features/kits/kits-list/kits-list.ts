@@ -6,6 +6,7 @@ import { PaginationBar } from '../../../core/components/pagination-bar/paginatio
 import { KitOrder, KitOrderStatus, KitSize } from '../../../core/models/kit-order.model';
 import { PaymentMethod, PaymentStatus } from '../../../core/models/payment.model';
 import { Player } from '../../../core/models/player.model';
+import { downloadReceiptPdf } from '../../../core/utils/receipt.util';
 import { KitOrdersService } from '../../../core/services/kit-orders.service';
 import { PlayersService } from '../../../core/services/players.service';
 import { SettingsService } from '../../../core/services/settings.service';
@@ -305,6 +306,25 @@ export class KitsList {
       this.errorMessage.set(extractErrorMessage(error));
     } finally {
       this.isSubmitting.set(false);
+    }
+  }
+
+  async downloadReceipt(order: KitOrder): Promise<void> {
+    try {
+      await downloadReceiptPdf({
+        id: order.id,
+        playerName: order.playerName,
+        description: 'Team kit',
+        detail: `Size ${order.size}`,
+        amount: order.amount,
+        currency: 'TND',
+        paymentDate: order.paymentDate,
+        method: order.method,
+        reference: order.reference,
+        notes: order.notes,
+      });
+    } catch (error) {
+      this.errorMessage.set(extractErrorMessage(error));
     }
   }
 

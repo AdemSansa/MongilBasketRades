@@ -214,6 +214,9 @@
                   </form>
                 } @else {
                   <button type="button" class="primary" (click)="startEdit(payment)">Edit</button>
+                  @if (payment.status === 'PAID') {
+                    <button type="button" class="secondary" (click)="downloadReceipt(payment)">Receipt</button>
+                  }
                 }
               </td>
             </tr>
