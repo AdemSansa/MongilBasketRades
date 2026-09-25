@@ -45,8 +45,8 @@ public class Payment {
     private Player player;
 
     /** Denormalized from player.parent for quick lookups (docs/database/entities.md). */
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "parent_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
     private Parent parent;
 
     @Column(nullable = false, precision = 10, scale = 2)

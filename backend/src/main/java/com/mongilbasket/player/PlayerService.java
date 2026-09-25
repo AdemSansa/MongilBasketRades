@@ -11,8 +11,11 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mongilbasket.common.BadRequestException;
+import com.mongilbasket.common.ConflictException;
 import com.mongilbasket.common.NotFoundException;
+import com.mongilbasket.group.Group;
+import com.mongilbasket.group.GroupRepository;
+import com.mongilbasket.payment.PaymentRepository;
 import com.mongilbasket.parent.Parent;
 import com.mongilbasket.parent.ParentRepository;
 import com.mongilbasket.user.Role;
@@ -26,6 +29,8 @@ public class PlayerService {
 
     private final PlayerRepository playerRepository;
     private final ParentRepository parentRepository;
+    private final GroupRepository groupRepository;
+    private final PaymentRepository paymentRepository;
 
     /**
      * ADMIN and COACH only (enforced by @PreAuthorize on the controller).
@@ -73,7 +78,29 @@ public class PlayerService {
                 .parent(parent)
                 .build();
 
+        if (request.groupId() != null && currentUser.getRole() == Role.ADMIN) {
+            Group group = groupRepository.findById(request.groupId())
+                    .orElseThrow(() -> new NotFoundException("Group not found"));
+            long currentCount = playerRepository.countByCurrentGroupIdAndStatus(group.getId(), PlayerStatus.ACTIVE);
+            if (currentCount >= group.getCapacity()) {
+                throw new ConflictException("This group is full (" + group.getCapacity() + " players)");
+            }
+            player.setCurrentGroup(group);
+        }
+
         playerRepository.save(player);
+        return PlayerResponse.from(player);
+    }
+
+    /** Links (or unlinks, with a null parentId) a parent account to a player, and keeps the payments' denormalized parent in sync. */
+    @Transactional
+    public PlayerResponse assignParent(UUID id, UUID parentId) {
+        Player player = findByIdOrThrow(id);
+        Parent parent = parentId == null
+                ? null
+                : parentRepository.findById(parentId).orElseThrow(() -> new NotFoundException("Parent not found"));
+        player.setParent(parent);
+        paymentRepository.findByPlayerIdOrderByPeriodDesc(id).forEach(payment -> payment.setParent(parent));
         return PlayerResponse.from(player);
     }
 
@@ -112,7 +139,7 @@ public class PlayerService {
                     .orElseThrow(() -> new NotFoundException("Parent profile not found"));
         }
         if (parentId == null) {
-            throw new BadRequestException("parentId is required when creating a player as admin");
+            return null;
         }
         return parentRepository.findById(parentId)
                 .orElseThrow(() -> new NotFoundException("Parent not found"));
@@ -131,6 +158,6 @@ public class PlayerService {
     }
 
     private boolean isOwner(Player player, User currentUser) {
-        return player.getParent().getUser().getId().equals(currentUser.getId());
+        return player.getParent() != null && player.getParent().getUser().getId().equals(currentUser.getId());
     }
 }

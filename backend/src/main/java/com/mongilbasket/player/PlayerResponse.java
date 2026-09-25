@@ -31,7 +31,7 @@ public record PlayerResponse(
                 player.getEmergencyContactPhone(),
                 player.getStatus().name(),
                 player.getRegistrationDate(),
-                player.getParent().getId(),
+                player.getParent() != null ? player.getParent().getId() : null,
                 player.getCurrentGroup() != null ? player.getCurrentGroup().getId() : null);
     }
 }

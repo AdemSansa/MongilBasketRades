@@ -25,7 +25,7 @@ public record PaymentResponse(
                 p.getId(),
                 p.getPlayer().getId(),
                 p.getPlayer().getFirstName() + " " + p.getPlayer().getLastName(),
-                p.getParent().getId(),
+                p.getParent() != null ? p.getParent().getId() : null,
                 p.getAmount(),
                 p.getCurrency(),
                 p.getType().name(),

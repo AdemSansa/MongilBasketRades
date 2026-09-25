@@ -69,8 +69,9 @@ public class Player {
     @Column(nullable = false)
     private LocalDate registrationDate;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "parent_id", nullable = false)
+    /** Optional: walk-in players can be registered before any parent account exists and linked later. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
     private Parent parent;
 
     /** Set on registration approval (Phase 6) — null until then. */

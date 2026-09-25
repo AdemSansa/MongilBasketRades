@@ -1,6 +1,9 @@
 <div class="header-row">
   <h1>Players</h1>
   <div class="header-actions">
+    <button type="button" class="primary" (click)="toggleAddForm()">
+      {{ showAddForm() ? 'Cancel' : '+ Add Player' }}
+    </button>
     <button type="button" class="secondary" [disabled]="isExportingExcel()" (click)="exportExcel()">
       {{ isExportingExcel() ? 'Exporting…' : 'Export Excel' }}
     </button>
@@ -9,6 +12,105 @@
     </button>
   </div>
 </div>
+
+@if (addedMessage()) {
+  <div class="success-banner">{{ addedMessage() }}</div>
+}
+
+@if (showAddForm()) {
+  <form class="add-form" [formGroup]="addForm" (ngSubmit)="submitAdd()">
+    <h2>Register a player</h2>
+
+    <div class="add-grid">
+      <label>
+        First name
+        <input type="text" formControlName="firstName" />
+      </label>
+      <label>
+        Last name
+        <input type="text" formControlName="lastName" />
+      </label>
+      <label>
+        Date of birth
+        <input type="date" formControlName="dateOfBirth" />
+      </label>
+      <label>
+        Gender
+        <select formControlName="gender">
+          <option value="">—</option>
+          <option value="MALE">Male</option>
+          <option value="FEMALE">Female</option>
+        </select>
+      </label>
+      <label>
+        Group (optional)
+        <select formControlName="groupId">
+          <option value="">Assign later</option>
+          @for (group of groups(); track group.id) {
+            <option [value]="group.id">{{ group.name }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Emergency contact (optional)
+        <input type="text" formControlName="emergencyContactName" />
+      </label>
+      <label>
+        Emergency phone (optional)
+        <input type="text" formControlName="emergencyContactPhone" />
+      </label>
+      <label>
+        Medical notes (optional)
+        <input type="text" formControlName="medicalNotes" />
+      </label>
+    </div>
+
+    <h3>Parent account</h3>
+    <div class="parent-mode">
+      <label><input type="radio" value="NONE" formControlName="parentMode" /> No parent yet</label>
+      <label><input type="radio" value="EXISTING" formControlName="parentMode" /> Existing parent</label>
+      <label><input type="radio" value="NEW" formControlName="parentMode" /> New parent</label>
+    </div>
+
+    @if (addForm.controls.parentMode.value === 'EXISTING') {
+      <label>
+        Parent
+        <select formControlName="parentId">
+          <option value="">Select a parent</option>
+          @for (parent of parents(); track parent.id) {
+            <option [value]="parent.id">
+              {{ parent.firstName }} {{ parent.lastName }} — {{ parent.email }} ({{ parent.childCount }} children)
+            </option>
+          }
+        </select>
+      </label>
+    } @else if (addForm.controls.parentMode.value === 'NEW') {
+      <div class="add-grid">
+        <label>
+          Parent first name
+          <input type="text" formControlName="newParentFirstName" />
+        </label>
+        <label>
+          Parent last name
+          <input type="text" formControlName="newParentLastName" />
+        </label>
+        <label>
+          Parent email
+          <input type="email" formControlName="newParentEmail" />
+        </label>
+        <label>
+          Parent phone (optional)
+          <input type="text" formControlName="newParentPhone" />
+        </label>
+      </div>
+      <p class="muted">Login details are emailed to the parent so they can follow their child in the mobile app.</p>
+    }
+
+    <button type="submit" class="primary" [disabled]="isAdding()">
+      {{ isAdding() ? 'Registering…' : 'Register player' }}
+    </button>
+  </form>
+}
 
 @if (showPdfPanel()) {
   <div class="pdf-panel">
@@ -105,6 +207,7 @@
           <th>Age</th>
           <th>Gender</th>
           <th>Group</th>
+          <th>Parent</th>
           <th>Status</th>
           <th>Registered</th>
           <th>Actions</th>
@@ -117,6 +220,7 @@
             <td>{{ age(player.dateOfBirth) }}</td>
             <td>{{ player.gender || '—' }}</td>
             <td>{{ groupName(player.currentGroupId) }}</td>
+            <td [class.muted]="!player.parentId">{{ parentName(player.parentId) }}</td>
             <td><span class="status-badge" [attr.data-status]="player.status">{{ player.status }}</span></td>
             <td>{{ player.registrationDate | date: 'mediumDate' }}</td>
             <td>
@@ -138,6 +242,29 @@
                   </button>
                   <button type="button" (click)="cancelEdit()">Cancel</button>
                 </form>
+              } @else if (linkingId() === player.id) {
+                <form class="edit-inline" [formGroup]="linkForm" (ngSubmit)="confirmLink(player)">
+                  <select formControlName="parentMode">
+                    <option value="NONE">No parent</option>
+                    <option value="EXISTING">Existing parent</option>
+                    <option value="NEW">New parent</option>
+                  </select>
+                  @if (linkForm.controls.parentMode.value === 'EXISTING') {
+                    <select formControlName="parentId">
+                      <option value="">Select a parent</option>
+                      @for (parent of parents(); track parent.id) {
+                        <option [value]="parent.id">{{ parent.firstName }} {{ parent.lastName }} — {{ parent.email }}</option>
+                      }
+                    </select>
+                  } @else if (linkForm.controls.parentMode.value === 'NEW') {
+                    <input type="text" placeholder="First name" formControlName="newParentFirstName" />
+                    <input type="text" placeholder="Last name" formControlName="newParentLastName" />
+                    <input type="email" placeholder="Email" formControlName="newParentEmail" />
+                    <input type="text" placeholder="Phone" formControlName="newParentPhone" />
+                  }
+                  <button type="submit" class="primary" [disabled]="actionInFlightId() === player.id">Save</button>
+                  <button type="button" (click)="cancelLink()">Cancel</button>
+                </form>
               } @else if (archivingId() === player.id) {
                 <div class="confirm-inline">
                   <span>Archive this player?</span>
@@ -153,6 +280,7 @@
                 </div>
               } @else {
                 <button type="button" class="primary" (click)="startEdit(player)">Edit</button>
+                <button type="button" class="secondary" (click)="startLink(player)">Parent</button>
                 <a class="secondary" [routerLink]="['/dashboard/players', player.id]">Payments</a>
                 @if (player.status === 'ACTIVE') {
                   <button type="button" class="danger" (click)="startArchive(player)">Archive</button>

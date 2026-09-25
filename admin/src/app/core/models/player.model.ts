@@ -10,6 +10,6 @@ export interface Player {
   emergencyContactPhone: string | null;
   status: string;
   registrationDate: string;
-  parentId: string;
+  parentId: string | null;
   currentGroupId: string | null;
 }

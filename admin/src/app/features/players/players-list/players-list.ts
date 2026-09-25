@@ -7,7 +7,9 @@ import { PaginationBar } from '../../../core/components/pagination-bar/paginatio
 import { Coach } from '../../../core/models/coach.model';
 import { Group } from '../../../core/models/group.model';
 import { Player } from '../../../core/models/player.model';
+import { Parent } from '../../../core/models/parent.model';
 import { CoachesService } from '../../../core/services/coaches.service';
+import { ParentsService } from '../../../core/services/parents.service';
 import { GroupsService } from '../../../core/services/groups.service';
 import { PaymentsService } from '../../../core/services/payments.service';
 import { PlayersService } from '../../../core/services/players.service';
@@ -25,6 +27,8 @@ const GENDER_FILTERS: { value: string | null; label: string }[] = [
   { value: 'MALE', label: 'Male' },
   { value: 'FEMALE', label: 'Female' },
 ];
+
+type ParentMode = 'NONE' | 'EXISTING' | 'NEW';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -44,6 +48,7 @@ export class PlayersList {
   private readonly coachesService = inject(CoachesService);
   private readonly reportsService = inject(ReportsService);
   private readonly paymentsService = inject(PaymentsService);
+  private readonly parentsService = inject(ParentsService);
 
   readonly statusFilters = STATUS_FILTERS;
   readonly genderFilters = GENDER_FILTERS;
@@ -62,6 +67,38 @@ export class PlayersList {
     return this.players().slice(start, start + this.pageSize);
   });
   readonly groups = signal<Group[]>([]);
+  readonly parents = signal<Parent[]>([]);
+
+  // Walk-in registration: the parent is optional and can be linked later.
+  readonly showAddForm = signal(false);
+  readonly isAdding = signal(false);
+  readonly addedMessage = signal<string | null>(null);
+  readonly addForm = this.fb.nonNullable.group({
+    firstName: ['', Validators.required],
+    lastName: ['', Validators.required],
+    dateOfBirth: ['', Validators.required],
+    gender: [''],
+    groupId: [''],
+    emergencyContactName: [''],
+    emergencyContactPhone: [''],
+    medicalNotes: [''],
+    parentMode: ['NONE' as ParentMode],
+    parentId: [''],
+    newParentFirstName: [''],
+    newParentLastName: [''],
+    newParentEmail: [''],
+    newParentPhone: [''],
+  });
+
+  readonly linkingId = signal<string | null>(null);
+  readonly linkForm = this.fb.nonNullable.group({
+    parentMode: ['EXISTING' as ParentMode],
+    parentId: [''],
+    newParentFirstName: [''],
+    newParentLastName: [''],
+    newParentEmail: [''],
+    newParentPhone: [''],
+  });
   readonly coaches = signal<Coach[]>([]);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
@@ -96,9 +133,14 @@ export class PlayersList {
 
   private async loadLookups(): Promise<void> {
     try {
-      const [groups, coaches] = await Promise.all([this.groupsService.list(), this.coachesService.list()]);
+      const [groups, coaches, parents] = await Promise.all([
+        this.groupsService.list(),
+        this.coachesService.list(),
+        this.parentsService.list(),
+      ]);
       this.groups.set(groups);
       this.coaches.set(coaches);
+      this.parents.set(parents);
     } catch {
       // Group/coach names are a display nicety here; a failure just falls back to raw ids
       // for the table, and the PDF/coach filter dropdowns simply stay empty.
@@ -108,6 +150,112 @@ export class PlayersList {
   groupName(groupId: string | null): string {
     if (!groupId) return '—';
     return this.groups().find((g) => g.id === groupId)?.name ?? groupId;
+  }
+
+  parentName(parentId: string | null): string {
+    if (!parentId) return 'No parent';
+    const parent = this.parents().find((p) => p.id === parentId);
+    return parent ? `${parent.firstName} ${parent.lastName}` : '—';
+  }
+
+  toggleAddForm(): void {
+    this.showAddForm.update((v) => !v);
+    this.addedMessage.set(null);
+  }
+
+  /** Resolves the parent choice to a parent id, creating a new parent account (credentials emailed) when asked. */
+  private async resolveParentId(
+    mode: ParentMode,
+    existingId: string,
+    fresh: { firstName: string; lastName: string; email: string; phone: string },
+  ): Promise<{ parentId?: string; createdEmail?: string }> {
+    if (mode === 'EXISTING') return { parentId: existingId || undefined };
+    if (mode === 'NEW') {
+      if (!fresh.firstName.trim() || !fresh.lastName.trim() || !fresh.email.trim()) {
+        throw new Error('New parent needs a first name, last name and email.');
+      }
+      const created = await this.parentsService.create({
+        firstName: fresh.firstName.trim(),
+        lastName: fresh.lastName.trim(),
+        email: fresh.email.trim(),
+        phone: fresh.phone.trim() || undefined,
+      });
+      this.parents.update((list) => [...list, created]);
+      return { parentId: created.id, createdEmail: created.email };
+    }
+    return {};
+  }
+
+  async submitAdd(): Promise<void> {
+    if (this.addForm.invalid) {
+      this.addForm.markAllAsTouched();
+      return;
+    }
+
+    this.isAdding.set(true);
+    this.errorMessage.set(null);
+    this.addedMessage.set(null);
+    const raw = this.addForm.getRawValue();
+    try {
+      const { parentId, createdEmail } = await this.resolveParentId(raw.parentMode, raw.parentId, {
+        firstName: raw.newParentFirstName,
+        lastName: raw.newParentLastName,
+        email: raw.newParentEmail,
+        phone: raw.newParentPhone,
+      });
+      await this.playersService.create({
+        firstName: raw.firstName,
+        lastName: raw.lastName,
+        dateOfBirth: raw.dateOfBirth,
+        gender: raw.gender || undefined,
+        groupId: raw.groupId || undefined,
+        emergencyContactName: raw.emergencyContactName || undefined,
+        emergencyContactPhone: raw.emergencyContactPhone || undefined,
+        medicalNotes: raw.medicalNotes || undefined,
+        parentId,
+      });
+      this.addedMessage.set(
+        `${raw.firstName} ${raw.lastName} registered.` +
+          (createdEmail ? ` Parent login details were emailed to ${createdEmail}.` : ''),
+      );
+      this.addForm.reset({ parentMode: 'NONE' });
+      this.showAddForm.set(false);
+      await this.load();
+    } catch (error) {
+      this.errorMessage.set(extractErrorMessage(error));
+    } finally {
+      this.isAdding.set(false);
+    }
+  }
+
+  startLink(player: Player): void {
+    this.linkingId.set(player.id);
+    this.linkForm.reset({ parentMode: 'EXISTING', parentId: player.parentId ?? '' });
+  }
+
+  cancelLink(): void {
+    this.linkingId.set(null);
+  }
+
+  async confirmLink(player: Player): Promise<void> {
+    this.actionInFlightId.set(player.id);
+    this.errorMessage.set(null);
+    const raw = this.linkForm.getRawValue();
+    try {
+      const { parentId } = await this.resolveParentId(raw.parentMode, raw.parentId, {
+        firstName: raw.newParentFirstName,
+        lastName: raw.newParentLastName,
+        email: raw.newParentEmail,
+        phone: raw.newParentPhone,
+      });
+      await this.playersService.assignParent(player.id, parentId ?? null);
+      this.linkingId.set(null);
+      await this.load();
+    } catch (error) {
+      this.errorMessage.set(extractErrorMessage(error));
+    } finally {
+      this.actionInFlightId.set(null);
+    }
   }
 
   age(dateOfBirth: string): number {
@@ -272,6 +420,7 @@ export class PlayersList {
 }
 
 function extractErrorMessage(error: unknown): string {
+  if (error instanceof Error && !('status' in error)) return error.message;
   const httpError = error as { error?: { message?: string }; status?: number };
   if (httpError?.error?.message) return httpError.error.message;
   if (httpError?.status === 0) return 'Unable to reach the server. Check your connection.';

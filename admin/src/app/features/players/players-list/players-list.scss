@@ -297,3 +297,78 @@ table {
   font-size: 13px;
   color: var(--text);
 }
+
+.success-banner {
+  background: #e3f7e8;
+  color: #1e7d34;
+  border: 1px solid #b7e4c1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.add-form {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  h2 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--brand-navy);
+  }
+
+  h3 {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  input[type='text'],
+  input[type='email'],
+  input[type='date'],
+  select {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+  }
+
+  button.primary {
+    align-self: flex-start;
+  }
+}
+
+.add-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.parent-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+
+  label {
+    flex-direction: row;
+    align-items: center;
+    font-weight: 500;
+  }
+}

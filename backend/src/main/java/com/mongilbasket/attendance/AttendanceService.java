@@ -99,7 +99,7 @@ public class AttendanceService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));
         if (currentUser.getRole() == Role.PARENT
-                && !player.getParent().getUser().getId().equals(currentUser.getId())) {
+                && (player.getParent() == null || !player.getParent().getUser().getId().equals(currentUser.getId()))) {
             throw new AccessDeniedException("You can only view your own children's attendance");
         }
 

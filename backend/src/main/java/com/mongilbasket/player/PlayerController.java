@@ -69,6 +69,13 @@ public class PlayerController {
         return ApiResponse.ok(playerService.update(id, request, currentUser));
     }
 
+    @PutMapping("/{id}/parent")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<PlayerResponse> assignParent(
+            @PathVariable UUID id, @RequestBody PlayerParentAssignRequest request) {
+        return ApiResponse.ok(playerService.assignParent(id, request.parentId()));
+    }
+
     @PutMapping("/{id}/archive")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<PlayerResponse> archive(@PathVariable UUID id) {

@@ -9,9 +9,10 @@ public record ParentResponse(
         String firstName,
         String lastName,
         String phone,
-        String address) {
+        String address,
+        int childCount) {
 
-    public static ParentResponse from(Parent parent) {
+    public static ParentResponse from(Parent parent, int childCount) {
         var user = parent.getUser();
         return new ParentResponse(
                 parent.getId(),
@@ -20,6 +21,7 @@ public record ParentResponse(
                 user.getFirstName(),
                 user.getLastName(),
                 user.getPhone(),
-                parent.getAddress());
+                parent.getAddress(),
+                childCount);
     }
 }

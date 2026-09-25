@@ -151,7 +151,7 @@ public class PaymentService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException("Player not found"));
 
-        boolean isOwner = player.getParent().getUser().getId().equals(currentUser.getId());
+        boolean isOwner = player.getParent() != null && player.getParent().getUser().getId().equals(currentUser.getId());
         if (!isOwner && !isAdmin(currentUser)) {
             throw new AccessDeniedException("You can only view your own children's payments");
         }

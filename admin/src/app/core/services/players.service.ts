@@ -17,6 +17,18 @@ export interface UpdatePlayerRequest {
   emergencyContactPhone?: string;
 }
 
+export interface CreatePlayerRequest {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender?: string;
+  medicalNotes?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  parentId?: string;
+  groupId?: string;
+}
+
 export interface PlayerListFilters {
   search?: string;
   status?: string | null;
@@ -44,6 +56,18 @@ export class PlayersService {
 
     const response = await firstValueFrom(
       this.http.get<ApiResponse<Player[]>>(`${API_BASE_URL}/players`, { params }),
+    );
+    return response.data;
+  }
+
+  async create(request: CreatePlayerRequest): Promise<Player> {
+    const response = await firstValueFrom(this.http.post<ApiResponse<Player>>(`${API_BASE_URL}/players`, request));
+    return response.data;
+  }
+
+  async assignParent(id: string, parentId: string | null): Promise<Player> {
+    const response = await firstValueFrom(
+      this.http.put<ApiResponse<Player>>(`${API_BASE_URL}/players/${id}/parent`, { parentId }),
     );
     return response.data;
   }

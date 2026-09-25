@@ -42,7 +42,7 @@ public class RegistrationService {
     public RegistrationResponse create(RegistrationCreateRequest request, User currentUser) {
         Player player = playerRepository.findById(request.playerId())
                 .orElseThrow(() -> new NotFoundException("Player not found"));
-        if (!player.getParent().getUser().getId().equals(currentUser.getId())) {
+        if (player.getParent() == null || !player.getParent().getUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("You can only register your own children");
         }
 
